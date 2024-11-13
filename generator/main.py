@@ -15,15 +15,14 @@ class CatGenerator:
         self.__CATS_COUNT = N
         self.__BORDER = {'x': x_border, 'y': y_border}
         self.__RADIUS = R
-        # maximum number of trajectory repetitions
-        self.__REPEATS_MAX = int(min(x_border, y_border) / (R * 2))
 
         # [[x_0, x_1, ...], [y_0, y_1, ...]]
         self.__cat_matrix = np.vstack((x_array, y_array))
 
-        # every cat has its own count of trajectory repetitions
-        self.__repeat_array = np.random.uniform(1, self.__REPEATS_MAX, size=(N))
-        self.__angle_array = np.random.uniform(0, 360, size=(N))
+        self.__angle_array = np.random.uniform(0, 6.28, size=(N))
+        self.__angle_array_cos = np.cos(self.__angle_array)
+        self.__angle_array_sin = np.sin(self.__angle_array)
+
 
     @property
     def cats(self):
@@ -31,34 +30,34 @@ class CatGenerator:
 
     def update_cats(self):
         """Update every cat position"""
+        self.update_angles()
+        self.move_cats()
+
         for cat_id in range(self.__CATS_COUNT):
-            self.update_cat(cat_id)
-    
-    def update_cat(self, cat_id: int):
-        # choose trajectory for cat
-        angle = self.choose_angle(cat_id)
-        # move cat to a new coordinates
-        self.move_cat(cat_id, angle)
-        # fix cat in playing field
-        self.restrict_cat(cat_id)
-
-    def choose_angle(self, cat_id: int):
-        if self.__repeat_array[cat_id] <= 0:
-            self.__repeat_array[cat_id] = random.randint(1, self.__REPEATS_MAX)
-            self.__angle_array = np.random.uniform(0, 360, size=(self.__CATS_COUNT))
-
-        self.__repeat_array[cat_id] -= 1
-        return self.__angle_array[cat_id]
+            self.restrict_cat(cat_id)
 
 
-    def move_cat(self, cat_id: int, angle: float):
-        x, y = self.__cat_matrix[0][cat_id], self.__cat_matrix[1][cat_id]
+    def update_angles(self):
+        # get n random cats and change their angles
+        n = random.randint(0, self.__CATS_COUNT)
 
-        angle_in_radians = math.radians(angle)
-        new_x = x + self.__RADIUS * math.cos(angle_in_radians)
-        new_y = y + self.__RADIUS * math.sin(angle_in_radians)
+        cat_ids = np.random.choice(self.__CATS_COUNT, size=n, replace=False)
+        rads = np.random.uniform(0, 6.28, size=(n))
+        rads_cos = np.cos(rads)
+        rads_sin = np.sin(rads)
 
-        self.__cat_matrix[0][cat_id], self.__cat_matrix[1][cat_id] = new_x, new_y
+        self.__angle_array[cat_ids] = rads
+        self.__angle_array_cos[cat_ids] = rads_cos
+        self.__angle_array_sin[cat_ids] = rads_sin
+
+    def move_cats(self):
+        for cat_id in range(self.__CATS_COUNT):
+            x, y = self.__cat_matrix[0][cat_id], self.__cat_matrix[1][cat_id]
+
+            new_x = x + self.__RADIUS * self.__angle_array_cos[cat_id]
+            new_y = y + self.__RADIUS * self.__angle_array_sin[cat_id]
+
+            self.__cat_matrix[0][cat_id], self.__cat_matrix[1][cat_id] = new_x, new_y
 
     def restrict_cat(self, cat_id: int):
         """Return back the cat that escaped abroad into the playing field."""
