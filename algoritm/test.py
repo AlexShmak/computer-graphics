@@ -1,8 +1,8 @@
 import time
 import numpy as np
-from states_update import update_states
+from states_update import update_states, N, D
 
-points = np.random.randint(0, 10000, size=(5*10**4, 2))
+points = np.random.randint(0, 10000, size=(N, D))
 r0 = 3
 r1 = 6
 for i in range(7):
