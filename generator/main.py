@@ -19,7 +19,7 @@ class CatGenerator:
 
         # [[x_0, x_1, ...], [y_0, y_1, ...]]
         self.__cat_matrix = np.vstack((x_array, y_array))
-        self.__sleepy_cat_ids = np.array([])
+        self.__hit_cat_ids = np.array([])
 
         angle_array = np.random.uniform(0, 6.28, size=(N))
         self.__cos_array = np.cos(angle_array)
@@ -32,8 +32,8 @@ class CatGenerator:
         return self.__cat_matrix[0], self.__cat_matrix[1]
     
     @property
-    def sleepy_cat_ids(self):
-        return self.__sleepy_cat_ids
+    def hit_cat_ids(self):
+        return self.__hit_cat_ids
 
     def update_cats(self):
         """Update every cat position"""
@@ -78,7 +78,7 @@ class CatGenerator:
             if len(ids) == 0:
                 continue
 
-            self.__sleepy_cat_ids = ids
+            self.__hit_cat_ids = ids
 
             # return back these cats (but with small offset otherwise they will get stuck at the border)
             new_xs[ids], new_ys[ids] = self.__offset_points(
