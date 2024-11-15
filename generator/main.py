@@ -74,19 +74,22 @@ class CatGenerator:
                 continue
 
             # return back these cats (but with small offset otherwise they will get stuck at the border)
-            new_xs[ids], new_ys[ids] = self.__offset_points(xs[ids], ys[ids], intersection_xs, intersection_ys)
+            new_xs[ids], new_ys[ids] = self.__offset_points(
+                xs[ids], ys[ids], intersection_xs, intersection_ys
+            )
 
         self.__cat_matrix[0], self.__cat_matrix[1] = new_xs, new_ys
 
-    def __offset_points(self, xs, ys, intersection_xs, intersection_ys, offset_factor=0.1):
-        offset_x = (intersection_xs - xs) * offset_factor
-        offset_y = (intersection_ys - ys) * offset_factor
+    def __offset_points(
+        self, xs, ys, intersection_xs, intersection_ys, offset_factor=0.01
+    ):
+        offset_x = np.abs(intersection_xs - xs) * offset_factor
+        offset_y = np.abs(intersection_ys - ys) * offset_factor
 
         new_xs = xs + offset_x
         new_ys = ys + offset_y
 
         return (new_xs, new_ys)
-
 
     def __restrict_cats(self):
         """Keeps all cats within the boundaries."""
@@ -129,26 +132,27 @@ class CatGenerator:
 
 
 x_border, y_border = 1000, 1000
-gen = CatGenerator(N=10, R=100, x_border=x_border, y_border=y_border)
+N = 10
+gen = CatGenerator(N=N, R=100, x_border=x_border, y_border=y_border)
 
 gen.add_bad_border((100, 100), (100, 800))
 gen.add_bad_border((800, 100), (800, 800))
 gen.add_bad_border((800, 800), (100, 800))
-gen.add_bad_border((100, 800), (100, 100))
+gen.add_bad_border((100, 100), (800, 100))
 
+colors = ['green', 'red', 'yellow', 'black', 'cyan', 'brown', 'pink', 'olive', 'orange', 'purple']
 
 for i in range(10):
     xs, ys = gen.cats
 
-    # plt.scatter(xs, ys, c="blue")
-    # plt.title("Cats !!!")
+    plt.scatter(xs, ys, c=colors)
+    plt.title("Cats !!!")
 
-    # plt.plot([100, 100, 800, 800, 100], [100, 800, 800, 100, 100], "r-")
-    # plt.axis([0, x_border, 0, y_border])
+    plt.plot([100, 100, 800, 800, 100], [100, 800, 800, 100, 100], "r-")
+    plt.axis([0, x_border, 0, y_border])
 
-    # plt.savefig(f"{i}.png")
-    # plt.close()
+    plt.savefig(f"{i}.png")
+    plt.close()
 
-    start = time.perf_counter()
+    print(f"#{i}")
     gen.update_cats()
-    print(f"{i}:{time.perf_counter() - start}")
