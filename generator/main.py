@@ -20,6 +20,7 @@ class CatGenerator:
         # [[x_0, x_1, ...], [y_0, y_1, ...]]
         self.__cat_matrix = np.vstack((x_array, y_array))
         self.__hit_cat_ids = np.array([])
+        self.__sleepy_cat_ids = np.array([])
 
         angle_array = np.random.uniform(0, 6.28, size=(N))
         self.__cos_array = np.cos(angle_array)
@@ -34,6 +35,10 @@ class CatGenerator:
     @property
     def hit_cat_ids(self):
         return self.__hit_cat_ids
+    
+    @property
+    def sleepy_cat_ids(self):
+        return self.__sleepy_cat_ids
 
     def update_cats(self):
         """Update every cat position"""
@@ -63,6 +68,10 @@ class CatGenerator:
         """Move all cats based on their current angles."""
         xs, ys = self.__cat_matrix[0], self.__cat_matrix[1]
 
+        sleepy_cats_count = random.randint(0, self.__CATS_COUNT // 10)
+        sleepy_cat_ids = np.random.choice(self.__cat_matrix[0].shape[0], sleepy_cats_count, replace=False)
+        self.__sleepy_cat_ids = sleepy_cat_ids
+
         # find points where cats want to move
         new_xs = xs + self.__RADIUS * self.__cos_array
         new_ys = ys + self.__RADIUS * self.__sin_array
@@ -85,6 +94,7 @@ class CatGenerator:
                 xs[ids], ys[ids], intersection_xs, intersection_ys
             )
 
+        new_xs[sleepy_cat_ids], new_ys[sleepy_cat_ids] = xs[sleepy_cat_ids], ys[sleepy_cat_ids]
         self.__cat_matrix[0], self.__cat_matrix[1] = new_xs, new_ys
 
     def __offset_points(
@@ -139,7 +149,7 @@ class CatGenerator:
 
 
 x_border, y_border = 1000, 1000
-N = 10
+N = 5*(10**5)
 gen = CatGenerator(N=N, R=100, x_border=x_border, y_border=y_border)
 
 gen.add_bad_border((100, 100), (100, 800))
@@ -147,19 +157,22 @@ gen.add_bad_border((800, 100), (800, 800))
 gen.add_bad_border((800, 800), (100, 800))
 gen.add_bad_border((100, 100), (800, 100))
 
-colors = ['green', 'red', 'yellow', 'black', 'cyan', 'brown', 'pink', 'olive', 'orange', 'purple']
+# colors = ['green', 'red', 'yellow', 'black', 'cyan', 'brown', 'pink', 'olive', 'orange', 'purple']
 
 for i in range(10):
     xs, ys = gen.cats
 
-    plt.scatter(xs, ys, c=colors)
-    plt.title("Cats !!!")
+    # plt.scatter(xs, ys, c='red')
+    # plt.title("Cats !!!")
 
-    plt.plot([100, 100, 800, 800, 100], [100, 800, 800, 100, 100], "r-")
-    plt.axis([0, x_border, 0, y_border])
+    # plt.plot([100, 100, 800, 800, 100], [100, 800, 800, 100, 100], "r-")
+    # plt.axis([0, x_border, 0, y_border])
 
-    plt.savefig(f"{i}.png")
-    plt.close()
+    # plt.savefig(f"{i}.png")
+    # plt.close()
 
-    print(f"#{i}")
+    print(f"#{i}", gen.sleepy_cat_ids, gen.hit_cat_ids)
+
+    start = time.perf_counter()
     gen.update_cats()
+    print(f'time: {time.perf_counter() - start}')
