@@ -5,11 +5,10 @@ import faiss
 from common import WALK, HISS, FIGHT
 
 N = 5*10**4
-states = np.full(N, WALK, dtype=np.uint8)
 D = 2
 
 
-def update_states(points, r0, r1):
+def update_states(points, r0, r1, states):
     res = faiss.StandardGpuResources()
     index = faiss.GpuIndexFlatL2(res, D)
 
