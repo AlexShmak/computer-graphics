@@ -16,8 +16,8 @@ class CatGenerator:
         self.__CATS_COUNT = N
         self.__BORDER = {"x": x_border, "y": y_border}
         self.__RADIUS = R
-        self.__FOOD_COUNT = 5 # number of food pieces on the map at the same time
-        self.__FOOD_SMELL_RADIUS = 10
+        self.__FOOD_COUNT = 5  # number of food pieces on the map at the same time
+        self.__FOOD_SMELL_RADIUS = self.__RADIUS
 
         # [[x_0, x_1, ...], [y_0, y_1, ...]]
         self.__cat_coordinates = np.vstack((x_array, y_array))
@@ -39,19 +39,19 @@ class CatGenerator:
     @property
     def cats(self):
         return self.__cat_coordinates[0], self.__cat_coordinates[1]
-    
+
     @property
     def hit_cat_ids(self):
         return self.__hit_cat_ids
-    
+
     @property
     def sleepy_cat_ids(self):
         return self.__sleepy_cat_ids
-    
+
     @property
     def eating_cat_ids(self):
         return self.__eating_cat_ids
-    
+
     @property
     def food(self):
         return self.__food_coordinates
@@ -113,9 +113,9 @@ class CatGenerator:
 
         ### find eating cats
         food_xs, food_ys = self.__food_coordinates
-        for food_x, food_y in zip(food_xs, food_ys):
+        for food_id, (food_x, food_y) in enumerate(zip(food_xs, food_ys)):
             distances = np.sqrt(np.square(xs - food_x) + np.square(ys - food_y))
-            eating_cats_mask =  distances < self.__FOOD_SMELL_RADIUS
+            eating_cats_mask = distances < self.__FOOD_SMELL_RADIUS
 
             # stay at the same place
             new_xs[eating_cats_mask] = xs[eating_cats_mask]
@@ -123,6 +123,15 @@ class CatGenerator:
 
             self.__eating_cat_ids = np.where(eating_cats_mask)
 
+            # relocate food
+            if np.any(eating_cats_mask):
+                (
+                    self.__food_coordinates[0, food_id],
+                    self.__food_coordinates[1, food_id],
+                ) = (
+                    random.randint(0, self.__BORDER["x"]),
+                    random.randint(0, self.__BORDER["y"]),
+                )
 
         # put some of the cats to sleep
         new_xs[sleepy_cat_ids], new_ys[sleepy_cat_ids] = xs[sleepy_cat_ids], ys[sleepy_cat_ids]
@@ -194,18 +203,18 @@ for i in range(10):
     xs, ys = gen.cats
     food_xs, food_ys = gen.food
 
-    plt.scatter(xs, ys, c='red')
-    plt.scatter(food_xs, food_ys, c='black')
-    plt.title("Cats !!!")
+    # plt.scatter(xs, ys, c="red")
+    # plt.scatter(food_xs, food_ys, c="black")
+    # plt.title("Cats !!!")
 
-    plt.plot([100, 100, 800, 800, 100], [100, 800, 800, 100, 100], "b-")
-    plt.axis([0, x_border, 0, y_border])
+    # plt.plot([100, 100, 800, 800, 100], [100, 800, 800, 100, 100], "b-")
+    # plt.axis([0, x_border, 0, y_border])
 
-    plt.savefig(f"{i}.png")
-    plt.close()
+    # plt.savefig(f"{i}.png")
+    # plt.close()
 
     print(f"#{i}", gen.sleepy_cat_ids, gen.hit_cat_ids, gen.eating_cat_ids)
 
     start = time.perf_counter()
     gen.update_cats()
-    print(f'time: {time.perf_counter() - start}')
+    print(f"time: {time.perf_counter() - start}")
