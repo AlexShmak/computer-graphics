@@ -81,14 +81,16 @@ class MainWindow(QMainWindow):
             __panel.cats_frame.setMinimumSize(
                 700, 400
             )  # Set a minimum size for the cats frame
-            # Create a new instance of DrawCats with the specified number of cats
+            # Create a new instance of CatsDrawer with the specified number of cats
             generator = CatGenerator(
                 self.cats_number,
                 self.radius,
                 __panel.cats_frame.width(),
                 __panel.cats_frame.height(),
             )
-            __panel.cats = cats_drawer.CatsDrawer(self.cats_number, generator)
+            __panel.cats = cats_drawer.CatsDrawer(
+                self.cats_number, generator, self.r0, self.r1
+            )
             __panel.cats_layout.addWidget(
                 __panel.cats
             )  # Add the new cats widget to the cats layout

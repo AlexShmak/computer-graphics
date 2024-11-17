@@ -1,10 +1,9 @@
-import random
-import numpy as np
 import faiss
+import numpy as np
+from algoritm.common import FIGHT, HISS, WALK
 
-from common import WALK, HISS, FIGHT
 
-N = 5*10**4
+N = 5 * 10**4
 D = 2
 
 
