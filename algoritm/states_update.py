@@ -4,7 +4,6 @@ import faiss
 
 from common import WALK, HISS, FIGHT
 
-N = 5*10**4
 D = 2
 
 
@@ -16,7 +15,7 @@ def update_states(coords, r0, r1, states):
     index.add(points)
     distances, _ = index.search(points, k=D)
     ds = distances[:, 1]
-    for i in range(N):
+    for i in range(len(coords[0])):
         d = ds[i]
         if d <= r0:
             states[i] = FIGHT

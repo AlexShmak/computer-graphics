@@ -1,8 +1,8 @@
 import time
 import numpy as np
 from common import WALK
-from states_update import update_states, N, D
-
+from states_update import update_states, D
+N = 5 * 10**4
 points = np.random.randint(0, 10000, size=(D, N))
 st = np.full(N, WALK, dtype=np.uint8)
 states = [st.copy() for _ in range(7)]
