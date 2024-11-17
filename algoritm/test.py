@@ -3,7 +3,7 @@ import numpy as np
 from common import WALK
 from states_update import update_states, N, D
 
-points = np.random.randint(0, 10000, size=(N, D))
+points = np.random.randint(0, 10000, size=(D, N))
 st = np.full(N, WALK, dtype=np.uint8)
 states = [st.copy() for _ in range(7)]
 
