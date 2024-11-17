@@ -1,0 +1,3 @@
+WALK = 0
+HISS = 1
+FIGHT = 2
