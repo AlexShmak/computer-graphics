@@ -3,7 +3,6 @@ import sys
 
 from PyQt5.QtWidgets import (
     QApplication,
-    QFrame,
     QHBoxLayout,
     QMainWindow,
     QPushButton,
@@ -15,7 +14,7 @@ from PyQt5.QtWidgets import (
 sys.path.append(os.getcwd())
 
 from generator.generator import CatGenerator
-from widgets import input_panel, cats_drawer
+from widgets import input_panel, cats_panel, cats_drawer
 
 
 class MainWindow(QMainWindow):
@@ -35,6 +34,7 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1000, 1000)
 
         self.input_panel = input_panel.InputPanel()
+        self.cats_panel = cats_panel.CatsPanel()
 
         # Set the button to start animation
         self.start_button = QPushButton("Start animation")
@@ -45,28 +45,19 @@ class MainWindow(QMainWindow):
         # Add the left frame to the main layout
         self.layout.addWidget(self.input_panel.input_frame)
 
-        # Create a frame for the dots widget
-        self.dots_frame = QFrame(self)
-        self.dots_frame.setFrameShape(QFrame.Shape.StyledPanel)
-        self.dots_frame.setFrameShadow(QFrame.Shadow.Raised)
-
-        # Create a layout for the dots frame
-        self.dots_layout = None
-
-        # Add the dots frame to the main layout
-        self.layout.addWidget(self.dots_frame)
+        # Add the cats frame to the main layout
+        self.layout.addWidget(self.cats_panel.cats_frame)
 
         # Set the main layout to the central widget
         self.container = QWidget()
         self.container.setLayout(self.layout)
         self.setCentralWidget(self.container)
 
-        # Initially, no dots widget is created
-        self.dots = None
-
     def start_cats_animation(self):
-        if self.dots is None:
-            self.dots_layout = QVBoxLayout(self.dots_frame)
+        __panel = self.cats_panel
+
+        if __panel.cats is None:
+            __panel.cats_layout = QVBoxLayout(__panel.cats_frame)
 
         # Get the number and radius from the QLineEdit
         self.cats_number = self.input_panel.number.text().strip()
@@ -80,32 +71,32 @@ class MainWindow(QMainWindow):
             self.cats_number = int(self.cats_number)
             self.radius = int(self.radius)
 
-            # If there is already a dots widget, remove it
-            if self.dots is not None:
-                self.dots_layout.removeWidget(self.dots)
-                self.dots.deleteLater()  # Properly delete the old widget
+            # If there is already a cats widget, remove it
+            if __panel.cats is not None:
+                __panel.cats_layout.removeWidget(__panel.cats)
+                __panel.cats.deleteLater()  # Properly delete the old widget
 
-            # Ensure the dots frame is resized to fit the dots widget
+            # Ensure the cats frame is resized to fit the cats widget
             self.input_panel.input_frame.setMaximumSize(300, 2000)
-            self.dots_frame.setMinimumSize(
+            __panel.cats_frame.setMinimumSize(
                 700, 400
-            )  # Set a minimum size for the dots frame
-            # Create a new instance of DrawCats with the specified number of dots
+            )  # Set a minimum size for the cats frame
+            # Create a new instance of DrawCats with the specified number of cats
             generator = CatGenerator(
                 self.cats_number,
                 self.radius,
-                self.dots_frame.width(),
-                self.dots_frame.height(),
+                __panel.cats_frame.width(),
+                __panel.cats_frame.height(),
             )
-            self.dots = cats_drawer.CatsDrawer(self.cats_number, generator)
-            self.dots_layout.addWidget(
-                self.dots
-            )  # Add the new dots widget to the dots layout
+            __panel.cats = cats_drawer.CatsDrawer(self.cats_number, generator)
+            __panel.cats_layout.addWidget(
+                __panel.cats
+            )  # Add the new cats widget to the cats layout
 
             # Update the layout to reflect changes
-            self.dots_frame.setLayout(
-                self.dots_layout
-            )  # Set the layout of the dots frame
+            __panel.cats_frame.setLayout(
+                __panel.cats_layout
+            )  # Set the layout of the cats frame
 
 
 if __name__ == "__main__":
