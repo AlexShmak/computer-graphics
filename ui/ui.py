@@ -1,14 +1,10 @@
 import os
 import sys
 
-from PyQt5.QtCore import QPoint, Qt, QTimer
-from PyQt5.QtGui import QPainter, QPen
 from PyQt5.QtWidgets import (
     QApplication,
     QFrame,
     QHBoxLayout,
-    QLabel,
-    QLineEdit,
     QMainWindow,
     QPushButton,
     QVBoxLayout,
