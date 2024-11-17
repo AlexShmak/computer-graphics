@@ -19,17 +19,18 @@ from generator.generator import CatGenerator
 
 
 class DrawCats(QWidget):
-    def __init__(self, n, generator):
+    def __init__(self, n, generator: CatGenerator):
         super().__init__()
         self.cats_num = n
 
         self.generator = generator
         self.coordinates = generator.cats
+        self.prev_coordinates = generator.cats
 
         # Set up a timer to update positions
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_positions)
-        self.timer.start(350)
+        self.timer.start(100)
 
     def paintEvent(self, event):
         # Create a QPainter object to perform the drawing
@@ -38,13 +39,31 @@ class DrawCats(QWidget):
         pen.setWidth(3)
         painter.setPen(pen)
 
-        for i in range(self.cats_num):
-            painter.setPen(pen)
-            painter.drawPoint(
-                QPoint(int(self.coordinates[0][i]), int(self.coordinates[1][i]))
-            )
+        # for i in range(self.cats_num):
+        #     painter.drawPoint(
+        #         QPoint(int(self.coordinates[0][i]), int(self.coordinates[1][i]))
+        #     )
+
+        # * Smoother animation
+        for factor in range(1, 10):
+            for i in range(self.cats_num):
+                x = int(
+                    self.prev_coordinates[0][i]
+                    + (self.coordinates[0][i] - self.prev_coordinates[0][i])
+                    * factor
+                    * 0.1
+                )
+                y = int(
+                    self.prev_coordinates[1][i]
+                    + (self.coordinates[1][i] - self.prev_coordinates[1][i])
+                    * factor
+                    * 0.1
+                )
+
+                painter.drawPoint(QPoint(x, y))
 
     def update_positions(self):
+        self.prev_coordinates = self.coordinates
         self.generator.update_cats()
         self.coordinates = self.generator.cats
 
@@ -64,7 +83,7 @@ class MainWindow(QMainWindow):
 
         # Set the main window and get its geometry
         self.setWindowTitle("Cats")
-        self.setMinimumSize(1000, 1000)
+        self.setMinimumSize(1500, 1500)
         self.height = self.frameGeometry().height()
         self.width = self.frameGeometry().width()
 
@@ -101,16 +120,16 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.container)
 
     def set_cats_number(self, n):
-        self.cats_number = int(n)
+        self.cats_number = int(n.strip())
 
     def set_radius(self, r):
-        self.radius = int(r)
+        self.radius = int(r.strip())
 
     def start_cats_animation(self):
         # Get the number and radius from the QLineEdit
-        self.cats_number = int(self.input_number.text())
-        self.radius = int(self.input_radius.text())
-        n = self.input_number.text()
+        self.cats_number = int(self.input_number.text().strip())
+        self.radius = int(self.input_radius.text().strip())
+        n = self.input_number.text().strip()
 
         if n.isdigit():  # Ensure the input is a valid number
             n = int(n)
@@ -133,3 +152,13 @@ if __name__ == "__main__":
     window = MainWindow()
     window.show()
     app.exec()
+
+
+"""
+TODO:
+
+* Draw outline for widgets
+* Add signs for number and radius input fields
+* Add control for smoothness based on the number of cats
+
+"""
