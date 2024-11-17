@@ -104,24 +104,3 @@ if __name__ == "__main__":
     window = MainWindow()
     window.show()
     app.exec()
-
-
-"""
-FIXME: fix resizing window
-
-TODO:
-
-* get statuses from algorithm
-    * * Add sleepy cats
-    * * Add hit cats
-    * * Add eating cats
-* Add control for smoothness based on the number of cats (probably slider)
-* Separate widgets from MainWindow 
-
-DONE:
-
-* Draw frames for widgets 
-* Add signs for number and radius input fields
-* Add fields to set r0 and r1 manually (to calculate cats' states)
-
-"""
