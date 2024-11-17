@@ -81,8 +81,8 @@ class MainWindow(QMainWindow):
 
             self.cats_number = int(self.cats_number)
             self.radius = int(self.radius)
-            self.r0 = int(self.r0) * 100
-            self.r1 = int(self.r1) * 100
+            self.r0 = int(self.r0) * 10
+            self.r1 = int(self.r1) * 10
 
             # If there is already a cats widget, remove it
             if __panel.cats_drawer is not None:
