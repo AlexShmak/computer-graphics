@@ -61,11 +61,6 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.container)
 
     def start_cats_animation(self):
-        __panel = self.cats_panel
-
-        if __panel.cats_drawer is None:
-            __panel.cats_layout = QVBoxLayout(__panel.cats_frame)
-
         # Get the number and radius from the QLineEdit
         self.cats_number = self.input_panel.number.text().strip()
         self.radius = self.input_panel.radius.text().strip()
@@ -78,6 +73,12 @@ class MainWindow(QMainWindow):
             and self.r0.isdigit()
             and self.r1.isdigit()
         ):  # Ensure inputs are valid numbers
+            __panel = None
+            __panel = self.cats_panel
+
+            if __panel.cats_drawer is None:
+                __panel.cats_layout = QVBoxLayout(__panel.cats_frame)
+
             self.cats_number = int(self.cats_number)
             self.radius = int(self.radius)
             self.r0 = int(self.r0) * 100
