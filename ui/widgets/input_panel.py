@@ -50,10 +50,10 @@ class InputFields(QWidget):
         self.input_radius_label = QLabel("Maximum travel radius")
         self.input_radius_label.setAlignment(Qt.AlignCenter)
 
-        self.input_r0_label = QLabel("Cats start hissins at a distance:")
+        self.input_r0_label = QLabel("Cats start fighting at a distance:")
         self.input_r0_label.setAlignment(Qt.AlignCenter)
 
-        self.input_r1_label = QLabel("Cats start fighting at a distance:")
+        self.input_r1_label = QLabel("Cats start hissing at a distance:")
         self.input_r1_label.setAlignment(Qt.AlignCenter)
 
         # Set the input field for getting number of cats

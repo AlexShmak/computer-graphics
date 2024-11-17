@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
 )
 
 sys.path.append(os.getcwd())
-from algoritm.common import FIGHT, HISS, WALK
+from algoritm.common import FIGHT, HISS, WALK, EAT, HIT, SLEEP
 from algoritm.states_update import update_states
 from generator.generator import CatGenerator
 
@@ -17,10 +17,25 @@ from generator.generator import CatGenerator
 def state2color(state: int) -> str:
     if state == WALK:
         return "green"
-    elif state == HISS:
+    if state == HISS:
         return "orange"
+    if state == EAT:
+        return "purple"
+    if state == HIT:
+        return "black"
+    if state == SLEEP:
+        return "blue"
     else:
         return "red"
+
+
+def update_extra_states(sleepy_ids, hit_ids, eating_ids, states):
+    for i in sleepy_ids:
+        states[i] = SLEEP
+    for j in hit_ids:
+        states[j] = HIT
+    for k in eating_ids:
+        states[k] = EAT
 
 
 class CatsDrawer(QWidget):
@@ -30,10 +45,18 @@ class CatsDrawer(QWidget):
         self.states = np.full(self.cats_num, WALK, dtype=np.uint8)
 
         self.generator = generator
-        self.coordinates = generator.cats
-        self.prev_coordinates = generator.cats
+        self.coordinates = self.generator.cats
+        self.prev_coordinates = self.generator.cats
 
         update_states(self.coordinates, r0, r1, self.states)
+
+        self.sleepy_cat_ids = self.generator.sleepy_cat_ids
+        self.hit_cat_ids = self.generator.hit_cat_ids
+        self.eating_cat_ids = self.generator.eating_cat_ids
+
+        update_extra_states(
+            self.sleepy_cat_ids, self.hit_cat_ids, self.eating_cat_ids, self.states
+        )
 
         # Set up a timer to update positions
         self.timer = QTimer(self)
@@ -78,7 +101,16 @@ class CatsDrawer(QWidget):
     def update_positions(self, r0, r1):
         self.prev_coordinates = self.coordinates
         self.generator.update_cats()
+
         self.coordinates = self.generator.cats
+
+        self.sleepy_cat_ids = self.generator.sleepy_cat_ids
+        self.hit_cat_ids = self.generator.hit_cat_ids
+        self.eating_cat_ids = self.generator.eating_cat_ids
+
         update_states(self.coordinates, r0, r1, self.states)
+        update_extra_states(
+            self.sleepy_cat_ids, self.hit_cat_ids, self.eating_cat_ids, self.states
+        )
 
         self.update()  # Trigger another iteration of painting
