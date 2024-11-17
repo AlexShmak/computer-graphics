@@ -73,8 +73,8 @@ class MainWindow(QMainWindow):
         ):  # Ensure inputs are valid numbers
             self.cats_number = int(self.cats_number)
             self.radius = int(self.radius)
-            self.r0 = int(self.r0)
-            self.r1 = int(self.r1)
+            self.r0 = int(self.r0) * 100
+            self.r1 = int(self.r1) * 100
 
             # If there is already a cats widget, remove it
             if __panel.cats is not None:

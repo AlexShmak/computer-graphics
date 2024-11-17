@@ -32,11 +32,11 @@ class InputPanel(QWidget):
         self.input_layout.addWidget(self.input_fields.input_radius_label)
         self.input_layout.addWidget(self.input_fields.input_radius)
 
-        self.input_layout.addWidget(self.input_fields.input_r0_label)
-        self.input_layout.addWidget(self.input_fields.input_r0)
-
         self.input_layout.addWidget(self.input_fields.input_r1_label)
         self.input_layout.addWidget(self.input_fields.input_r1)
+
+        self.input_layout.addWidget(self.input_fields.input_r0_label)
+        self.input_layout.addWidget(self.input_fields.input_r0)
 
 
 class InputFields(QWidget):
@@ -67,11 +67,11 @@ class InputFields(QWidget):
         self.input_radius.setPlaceholderText("Enter travel radius")
 
         # Set the input field for getting hissing distance
-        self.input_r0 = QLineEdit()
-        self.input_r0.setMaximumWidth(250)
-        self.input_r0.setPlaceholderText("Enger hissing distance")
-
-        # Set the input field for getting fighting distance
         self.input_r1 = QLineEdit()
         self.input_r1.setMaximumWidth(250)
-        self.input_r1.setPlaceholderText("Enter fighting distance")
+        self.input_r1.setPlaceholderText("Enger hissing distance")
+
+        # Set the input field for getting fighting distance
+        self.input_r0 = QLineEdit()
+        self.input_r0.setMaximumWidth(250)
+        self.input_r0.setPlaceholderText("Enter fighting distance")
