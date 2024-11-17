@@ -37,7 +37,7 @@ class CatGenerator:
 
     @property
     def cats(self):
-        return self.__cat_coordinates[0], self.__cat_coordinates[1]
+        return self.__cat_coordinates
 
     @property
     def hit_cat_ids(self):
