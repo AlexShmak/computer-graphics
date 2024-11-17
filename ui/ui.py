@@ -40,7 +40,14 @@ class MainWindow(QMainWindow):
         self.start_button = QPushButton("Start animation")
         self.start_button.clicked.connect(self.start_cats_animation)
 
+        self.is_paused = False
+
+        # Set the pause/resume button
+        self.pause_button = QPushButton("Pause animation", self)
+        self.pause_button.clicked.connect(self.toggle_pause)
+
         self.input_panel.input_layout.addWidget(self.start_button)
+        self.input_panel.input_layout.addWidget(self.pause_button)
 
         # Add the left frame to the main layout
         self.layout.addWidget(self.input_panel.input_frame)
@@ -56,7 +63,7 @@ class MainWindow(QMainWindow):
     def start_cats_animation(self):
         __panel = self.cats_panel
 
-        if __panel.cats is None:
+        if __panel.cats_drawer is None:
             __panel.cats_layout = QVBoxLayout(__panel.cats_frame)
 
         # Get the number and radius from the QLineEdit
@@ -77,9 +84,9 @@ class MainWindow(QMainWindow):
             self.r1 = int(self.r1) * 100
 
             # If there is already a cats widget, remove it
-            if __panel.cats is not None:
-                __panel.cats_layout.removeWidget(__panel.cats)
-                __panel.cats.deleteLater()  # Properly delete the old widget
+            if __panel.cats_drawer is not None:
+                __panel.cats_layout.removeWidget(__panel.cats_drawer)
+                __panel.cats_drawer.deleteLater()  # Properly delete the old widget
 
             # Ensure the cats frame is resized to fit the cats widget
             self.input_panel.input_frame.setMaximumSize(300, 2000)
@@ -93,17 +100,27 @@ class MainWindow(QMainWindow):
                 __panel.cats_frame.width(),
                 __panel.cats_frame.height(),
             )
-            __panel.cats = cats_drawer.CatsDrawer(
+            __panel.cats_drawer = cats_drawer.CatsDrawer(
                 self.cats_number, generator, self.r0, self.r1
             )
             __panel.cats_layout.addWidget(
-                __panel.cats
+                __panel.cats_drawer
             )  # Add the new cats widget to the cats layout
 
             # Update the layout to reflect changes
             __panel.cats_frame.setLayout(
                 __panel.cats_layout
             )  # Set the layout of the cats frame
+
+    def toggle_pause(self):
+        self.is_paused = not self.is_paused
+        self.cats_panel.cats_drawer.is_paused = (
+            not self.cats_panel.cats_drawer.is_paused
+        )
+        if self.is_paused:
+            self.pause_button.setText("Resume Animation")
+        else:
+            self.pause_button.setText("Pause Animation")
 
 
 if __name__ == "__main__":

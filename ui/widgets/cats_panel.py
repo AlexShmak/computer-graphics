@@ -9,7 +9,7 @@ class CatsPanel(QWidget):
         super().__init__()
 
         # Initially, no cats widget is created
-        self.cats = None
+        self.cats_drawer = None
 
         # Create a frame for the cats widget
         self.cats_frame = QFrame(self)

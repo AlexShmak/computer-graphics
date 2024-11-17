@@ -41,6 +41,9 @@ def update_extra_states(sleepy_ids, hit_ids, eating_ids, states):
 class CatsDrawer(QWidget):
     def __init__(self, n, generator: CatGenerator, r0: int, r1: int):
         super().__init__()
+
+        self.is_paused = False
+
         self.cats_num = n
         self.states = np.full(self.cats_num, WALK, dtype=np.uint8)
 
@@ -99,18 +102,19 @@ class CatsDrawer(QWidget):
         #         painter.drawPoint(QPoint(x, y))
 
     def update_positions(self, r0, r1):
-        self.prev_coordinates = self.coordinates
-        self.generator.update_cats()
+        if not self.is_paused:
+            self.prev_coordinates = self.coordinates
+            self.generator.update_cats()
 
-        self.coordinates = self.generator.cats
+            self.coordinates = self.generator.cats
 
-        self.sleepy_cat_ids = self.generator.sleepy_cat_ids
-        self.hit_cat_ids = self.generator.hit_cat_ids
-        self.eating_cat_ids = self.generator.eating_cat_ids
+            self.sleepy_cat_ids = self.generator.sleepy_cat_ids
+            self.hit_cat_ids = self.generator.hit_cat_ids
+            self.eating_cat_ids = self.generator.eating_cat_ids
 
-        update_states(self.coordinates, r0, r1, self.states)
-        update_extra_states(
-            self.sleepy_cat_ids, self.hit_cat_ids, self.eating_cat_ids, self.states
-        )
+            update_states(self.coordinates, r0, r1, self.states)
+            update_extra_states(
+                self.sleepy_cat_ids, self.hit_cat_ids, self.eating_cat_ids, self.states
+            )
 
-        self.update()  # Trigger another iteration of painting
+            self.update()  # Trigger another iteration of painting
