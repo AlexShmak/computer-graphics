@@ -1,73 +1,25 @@
+import os
 import sys
 
-from PyQt5.QtCore import QPoint, QTimer
+from PyQt5.QtCore import QPoint, Qt, QTimer
 from PyQt5.QtGui import QPainter, QPen
 from PyQt5.QtWidgets import (
     QApplication,
+    QFrame,
     QHBoxLayout,
-    QVBoxLayout,
+    QLabel,
     QLineEdit,
     QMainWindow,
-    QWidget,
     QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
 
 # ? needed when importing `generator`
-sys.path.append("/home/alex/dev/uni/computer-graphics/")
+sys.path.append(os.getcwd())
 
 from generator.generator import CatGenerator
-
-
-class DrawCats(QWidget):
-    def __init__(self, n, generator: CatGenerator):
-        super().__init__()
-        self.cats_num = n
-
-        self.generator = generator
-        self.coordinates = generator.cats
-        self.prev_coordinates = generator.cats
-
-        # Set up a timer to update positions
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_positions)
-        self.timer.start(100)
-
-    def paintEvent(self, event):
-        # Create a QPainter object to perform the drawing
-        painter = QPainter(self)
-        pen = QPen()
-        pen.setWidth(3)
-        painter.setPen(pen)
-
-        # for i in range(self.cats_num):
-        #     painter.drawPoint(
-        #         QPoint(int(self.coordinates[0][i]), int(self.coordinates[1][i]))
-        #     )
-
-        # * Smoother animation
-        for factor in range(1, 10):
-            for i in range(self.cats_num):
-                x = int(
-                    self.prev_coordinates[0][i]
-                    + (self.coordinates[0][i] - self.prev_coordinates[0][i])
-                    * factor
-                    * 0.1
-                )
-                y = int(
-                    self.prev_coordinates[1][i]
-                    + (self.coordinates[1][i] - self.prev_coordinates[1][i])
-                    * factor
-                    * 0.1
-                )
-
-                painter.drawPoint(QPoint(x, y))
-
-    def update_positions(self):
-        self.prev_coordinates = self.coordinates
-        self.generator.update_cats()
-        self.coordinates = self.generator.cats
-
-        self.update()  # Trigger another iteration of painting
+from widgets import input_panel, cats_drawer
 
 
 class MainWindow(QMainWindow):
@@ -77,74 +29,87 @@ class MainWindow(QMainWindow):
         self.generator = None
         self.cats_number = None
         self.radius = None
+        self.r0 = None
+        self.r1 = None
 
         self.layout = QHBoxLayout()
-        self.left_side = QVBoxLayout()
 
         # Set the main window and get its geometry
         self.setWindowTitle("Cats")
-        self.setMinimumSize(1500, 1500)
-        self.height = self.frameGeometry().height()
-        self.width = self.frameGeometry().width()
+        self.setMinimumSize(1000, 1000)
 
-        # Set the input field for getting number of cats
-        self.input_number = QLineEdit()
-        self.input_number.setMaximumWidth(250)
-        self.input_number.setPlaceholderText("Enter number of cats")
-
-        # Set the input field for getting radius
-        self.input_radius = QLineEdit()
-        self.input_radius.setMaximumWidth(250)
-        self.input_radius.setPlaceholderText("Enter travel radius")
+        self.input_panel = input_panel.InputPanel()
 
         # Set the button to start animation
-        self.start_button = QPushButton()
-        self.start_button.setText("Start animation")
+        self.start_button = QPushButton("Start animation")
         self.start_button.clicked.connect(self.start_cats_animation)
-        self.start_button.pressed.connect(self.start_cats_animation)
 
-        # Initially, no dots widget is created
-        self.dots = None
+        self.input_panel.input_layout.addWidget(self.start_button)
 
-        # Add input fields and button to the layout
-        self.left_side.addWidget(self.input_number)
-        self.left_side.addWidget(self.input_radius)
-        self.left_side.addWidget(self.start_button)
+        # Add the left frame to the main layout
+        self.layout.addWidget(self.input_panel.input_frame)
 
-        # Add left interactive part to the main layout
-        self.layout.addLayout(self.left_side)
+        # Create a frame for the dots widget
+        self.dots_frame = QFrame(self)
+        self.dots_frame.setFrameShape(QFrame.Shape.StyledPanel)
+        self.dots_frame.setFrameShadow(QFrame.Shadow.Raised)
 
-        # Create a central widget and set the layout
+        # Create a layout for the dots frame
+        self.dots_layout = None
+
+        # Add the dots frame to the main layout
+        self.layout.addWidget(self.dots_frame)
+
+        # Set the main layout to the central widget
         self.container = QWidget()
         self.container.setLayout(self.layout)
         self.setCentralWidget(self.container)
 
-    def set_cats_number(self, n):
-        self.cats_number = int(n.strip())
-
-    def set_radius(self, r):
-        self.radius = int(r.strip())
+        # Initially, no dots widget is created
+        self.dots = None
 
     def start_cats_animation(self):
-        # Get the number and radius from the QLineEdit
-        self.cats_number = int(self.input_number.text().strip())
-        self.radius = int(self.input_radius.text().strip())
-        n = self.input_number.text().strip()
+        if self.dots is None:
+            self.dots_layout = QVBoxLayout(self.dots_frame)
 
-        if n.isdigit():  # Ensure the input is a valid number
-            n = int(n)
+        # Get the number and radius from the QLineEdit
+        self.cats_number = self.input_panel.number.text().strip()
+        self.radius = self.input_panel.radius.text().strip()
+        self.r0 = self.input_panel.r0.text().strip()
+        self.r1 = self.input_panel.r1.text().strip()
+
+        if (
+            self.cats_number.isdigit() and self.radius.isdigit()
+        ):  # Ensure inputs are valid numbers
+            self.cats_number = int(self.cats_number)
+            self.radius = int(self.radius)
 
             # If there is already a dots widget, remove it
             if self.dots is not None:
-                self.layout.removeWidget(self.dots)
+                self.dots_layout.removeWidget(self.dots)
                 self.dots.deleteLater()  # Properly delete the old widget
 
+            # Ensure the dots frame is resized to fit the dots widget
+            self.input_panel.input_frame.setMaximumSize(300, 2000)
+            self.dots_frame.setMinimumSize(
+                700, 400
+            )  # Set a minimum size for the dots frame
             # Create a new instance of DrawCats with the specified number of dots
             generator = CatGenerator(
-                self.cats_number, self.radius, self.width, self.height
+                self.cats_number,
+                self.radius,
+                self.dots_frame.width(),
+                self.dots_frame.height(),
             )
-            self.dots = DrawCats(n, generator)
-            self.layout.addWidget(self.dots)
+            self.dots = cats_drawer.CatsDrawer(self.cats_number, generator)
+            self.dots_layout.addWidget(
+                self.dots
+            )  # Add the new dots widget to the dots layout
+
+            # Update the layout to reflect changes
+            self.dots_frame.setLayout(
+                self.dots_layout
+            )  # Set the layout of the dots frame
 
 
 if __name__ == "__main__":
@@ -155,10 +120,21 @@ if __name__ == "__main__":
 
 
 """
+FIXME: fix resizing window
+
 TODO:
 
-* Draw outline for widgets
+* get statuses from algorithm
+    * * Add sleepy cats
+    * * Add hit cats
+    * * Add eating cats
+* Add control for smoothness based on the number of cats (probably slider)
+* Separate widgets from MainWindow 
+
+DONE:
+
+* Draw frames for widgets 
 * Add signs for number and radius input fields
-* Add control for smoothness based on the number of cats
+* Add fields to set r0 and r1 manually (to calculate cats' states)
 
 """
