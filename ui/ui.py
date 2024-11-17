@@ -1,8 +1,8 @@
 import sys
 
-from PyQt6.QtCore import QPoint, QTimer
-from PyQt6.QtGui import QPainter, QPen
-from PyQt6.QtWidgets import (
+from PyQt5.QtCore import QPoint, QTimer
+from PyQt5.QtGui import QPainter, QPen
+from PyQt5.QtWidgets import (
     QApplication,
     QHBoxLayout,
     QVBoxLayout,
