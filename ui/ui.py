@@ -66,10 +66,15 @@ class MainWindow(QMainWindow):
         self.r1 = self.input_panel.r1.text().strip()
 
         if (
-            self.cats_number.isdigit() and self.radius.isdigit()
+            self.cats_number.isdigit()
+            and self.radius.isdigit()
+            and self.r0.isdigit()
+            and self.r1.isdigit()
         ):  # Ensure inputs are valid numbers
             self.cats_number = int(self.cats_number)
             self.radius = int(self.radius)
+            self.r0 = int(self.r0)
+            self.r1 = int(self.r1)
 
             # If there is already a cats widget, remove it
             if __panel.cats is not None:

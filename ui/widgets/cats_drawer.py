@@ -33,7 +33,7 @@ class CatsDrawer(QWidget):
         self.coordinates = generator.cats
         self.prev_coordinates = generator.cats
 
-        # update_states(self.coordinates, r0, r1, self.states)
+        update_states(self.coordinates, r0, r1, self.states)
 
         # Set up a timer to update positions
         self.timer = QTimer(self)
@@ -56,7 +56,7 @@ class CatsDrawer(QWidget):
         # FIXME: make dependant on the number of cats
         for factor in range(1, 10):
             for i in range(self.cats_num):
-                # pen.setColor(QColor(state2color(self.states[i])))
+                pen.setColor(QColor(state2color(self.states[i])))
                 x = int(
                     self.prev_coordinates[0][i]
                     + (self.coordinates[0][i] - self.prev_coordinates[0][i])
@@ -76,6 +76,6 @@ class CatsDrawer(QWidget):
         self.prev_coordinates = self.coordinates
         self.generator.update_cats()
         self.coordinates = self.generator.cats
-        # update_states(self.coordinates, r0, r1, self.states)
+        update_states(self.coordinates, r0, r1, self.states)
 
         self.update()  # Trigger another iteration of painting
