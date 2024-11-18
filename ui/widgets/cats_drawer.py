@@ -2,8 +2,8 @@ import os
 import sys
 
 import numpy as np
-from PyQt5.QtCore import QPoint, QTimer
-from PyQt5.QtGui import QColor, QPainter, QPen
+from PyQt5.QtCore import QPoint, QTimer, Qt
+from PyQt5.QtGui import QColor, QPainter, QPen, QPixmap
 from PyQt5.QtWidgets import (
     QWidget,
 )
@@ -38,6 +38,10 @@ def update_extra_states(sleepy_ids, hit_ids, eating_ids, states):
         states[int(k)] = EAT
 
 
+def resize_image(image: QPixmap, n: int):
+    return image.scaled(n, n, Qt.KeepAspectRatio)
+
+
 class CatsDrawer(QWidget):
     def __init__(self, n, generator: CatGenerator, r0: int, r1: int):
         super().__init__()
@@ -46,6 +50,16 @@ class CatsDrawer(QWidget):
 
         self.cats_num = n
         self.states = np.full(self.cats_num, WALK, dtype=np.uint8)
+
+        self.sleep_image = QPixmap("images/sleep.png")
+        self.eat_image = QPixmap("images/eat.png")
+        self.hiss_image = QPixmap("images/hiss.png")
+        self.fight_image = QPixmap("images/fight.png")
+        self.hit_image = QPixmap("images/hit.png")
+        self.walk_image = QPixmap("images/walk.png")
+        self.food_image = QPixmap("images/food.png")
+
+        self.scale_factor = 50
 
         self.generator = generator
         self.coordinates = self.generator.cats
@@ -65,7 +79,7 @@ class CatsDrawer(QWidget):
         # Set up a timer to update positions
         self.timer = QTimer(self)
         self.timer.timeout.connect(lambda: self.update_positions(r0, r1))
-        self.timer.start(16)
+        self.timer.start(350)
 
     def paintEvent(self, event):
         # Create a QPainter object to perform the drawing
@@ -84,7 +98,8 @@ class CatsDrawer(QWidget):
             max_factor = 1
         for factor in range(min_factor, max_factor):
             for i in range(self.cats_num):
-                pen.setColor(QColor(state2color(self.states[i])))
+                state = self.states[i]
+                # pen.setColor(QColor(state2color(state)))
                 painter.setPen(pen)
                 x = int(
                     self.prev_coordinates[0][i]
@@ -98,14 +113,48 @@ class CatsDrawer(QWidget):
                     * factor
                     * 0.1
                 )
-
-                painter.drawPoint(QPoint(x, y))
+                image_position = QPoint(x, y)
+                if state == SLEEP:
+                    painter.drawPixmap(
+                        image_position,
+                        resize_image(self.sleep_image, self.scale_factor),
+                    )
+                if state == HISS:
+                    painter.drawPixmap(
+                        image_position, resize_image(self.hiss_image, self.scale_factor)
+                    )
+                if state == FIGHT:
+                    painter.drawPixmap(
+                        image_position,
+                        resize_image(self.fight_image, self.scale_factor),
+                    )
+                if state == EAT:
+                    painter.drawPixmap(
+                        image_position, resize_image(self.eat_image, self.scale_factor)
+                    )
+                if state == HIT:
+                    painter.drawPixmap(
+                        image_position, resize_image(self.hit_image, self.scale_factor)
+                    )
+                if state == WALK:
+                    painter.drawPixmap(
+                        image_position, resize_image(self.walk_image, self.scale_factor)
+                    )
+                # else:
+                #     painter.drawPoint(QPoint(x, y))
 
         for j in range(self.food_num):
-            pen.setColor(QColor("magenta"))
-            painter.setPen(pen)
-            painter.drawPoint(
-                QPoint(int(self.generator.food[0][j]), int(self.generator.food[1][j]))
+            # pen.setColor(QColor("magenta"))
+            # painter.setPen(pen)
+            # painter.drawPoint(
+            #     QPoint(int(self.generator.food[0][j]), int(self.generator.food[1][j]))
+            # )
+            image_position = QPoint(
+                int(self.generator.food[0][j]), int(self.generator.food[1][j])
+            )
+            painter.drawPixmap(
+                image_position,
+                resize_image(self.food_image, self.scale_factor),
             )
 
     def update_positions(self, r0, r1):
