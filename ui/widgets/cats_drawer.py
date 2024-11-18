@@ -35,7 +35,7 @@ def update_extra_states(sleepy_ids, hit_ids, eating_ids, states):
     for j in hit_ids:
         states[j] = HIT
     for k in eating_ids:
-        states[k] = EAT
+        states[int(k)] = EAT
 
 
 class CatsDrawer(QWidget):
