@@ -82,6 +82,7 @@ class CatGenerator:
     def __move_cats(self):
         """Move all cats based on their current angles."""
         xs, ys = self.__cat_coordinates[0], self.__cat_coordinates[1]
+        self.__eating_cat_ids = np.array([])
 
         ### get sleepy cats
         sleepy_cats_count = random.randint(0, self.__CATS_COUNT // 10)
@@ -122,7 +123,9 @@ class CatGenerator:
             new_xs[eating_cats_mask] = xs[eating_cats_mask]
             new_ys[eating_cats_mask] = ys[eating_cats_mask]
 
-            self.__eating_cat_ids = np.where(eating_cats_mask)
+            self.__eating_cat_ids = np.append(
+                self.__eating_cat_ids, np.unique(np.where(eating_cats_mask))
+            )
 
             # relocate food
             if np.any(eating_cats_mask):
