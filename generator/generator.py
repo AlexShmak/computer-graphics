@@ -83,6 +83,7 @@ class CatGenerator:
     def __move_cats(self):
         """Move all cats based on their current angles."""
         xs, ys = self.__cat_coordinates[0], self.__cat_coordinates[1]
+        self.__eating_cat_ids = np.array([])
 
         ### get sleepy cats
         sleepy_cats_count = random.randint(0, self.__CATS_COUNT // 10)
@@ -121,7 +122,7 @@ class CatGenerator:
             new_xs[eating_cats_mask] = xs[eating_cats_mask]
             new_ys[eating_cats_mask] = ys[eating_cats_mask]
 
-            self.__eating_cat_ids = np.where(eating_cats_mask)
+            self.__eating_cat_ids = np.append(self.__eating_cat_ids, np.unique(np.where(eating_cats_mask)))
 
             # relocate food
             if np.any(eating_cats_mask):
@@ -191,7 +192,7 @@ class CatGenerator:
 
 
 x_border, y_border = 1000, 1000
-N = 5
+N = 20
 gen = CatGenerator(N=N, R=100, x_border=x_border, y_border=y_border)
 
 gen.add_bad_border((100, 100), (100, 800))
@@ -213,8 +214,7 @@ for i in range(10):
     # plt.savefig(f"{i}.png")
     # plt.close()
 
-    print(f"#{i}", gen.sleepy_cat_ids, gen.hit_cat_ids, gen.eating_cat_ids)
-
     start = time.perf_counter()
     gen.update_cats()
-    print(f"time: {time.perf_counter() - start}")
+    print(f"#{i} time: {time.perf_counter() - start}")
+    print(len(gen.eating_cat_ids))
