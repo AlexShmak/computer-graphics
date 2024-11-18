@@ -60,32 +60,25 @@ class CatsDrawer(QWidget):
         update_extra_states(
             self.sleepy_cat_ids, self.hit_cat_ids, self.eating_cat_ids, self.states
         )
+        self.food_num = len(self.generator.food[0])
 
         # Set up a timer to update positions
         self.timer = QTimer(self)
         self.timer.timeout.connect(lambda: self.update_positions(r0, r1))
-        self.timer.start(100)
+        self.timer.start(16)
 
     def paintEvent(self, event):
         # Create a QPainter object to perform the drawing
         painter = QPainter(self)
         pen = QPen()
         pen.setWidth(10)
-        # painter.setPen(pen)
-
-        # for i in range(self.cats_num):
-        #     pen.setColor(QColor(state2color(self.states[i])))
-        #     painter.setPen(pen)
-        #     painter.drawPoint(
-        #         QPoint(int(self.coordinates[0][i]), int(self.coordinates[1][i]))
-        #     )
 
         # * Smoother animation
         min_factor = 1
         if self.cats_num <= 500:
-            max_factor = 11
+            max_factor = 101
         if self.cats_num <= 5000:
-            max_factor = 6
+            max_factor = 51
         else:
             min_factor = 0
             max_factor = 1
@@ -107,6 +100,13 @@ class CatsDrawer(QWidget):
                 )
 
                 painter.drawPoint(QPoint(x, y))
+
+        for j in range(self.food_num):
+            pen.setColor(QColor("magenta"))
+            painter.setPen(pen)
+            painter.drawPoint(
+                QPoint(int(self.generator.food[0][j]), int(self.generator.food[1][j]))
+            )
 
     def update_positions(self, r0, r1):
         if not self.is_paused:
