@@ -1,3 +1,7 @@
+import time
+from generator.generator import CatGenerator
+from algoritm.states_update import update_states
+from algoritm.common import EAT, FIGHT, HISS, HIT, SLEEP, WALK
 import os
 import sys
 
@@ -7,9 +11,6 @@ from PyQt5.QtGui import QColor, QPainter, QPen, QPixmap
 from PyQt5.QtWidgets import QWidget
 
 sys.path.append(os.getcwd())
-from algoritm.common import EAT, FIGHT, HISS, HIT, SLEEP, WALK
-from algoritm.states_update import update_states
-from generator.generator import CatGenerator
 
 
 def update_extra_states(sleepy_ids, hit_ids, eating_ids, states):
@@ -19,9 +20,6 @@ def update_extra_states(sleepy_ids, hit_ids, eating_ids, states):
         states[j] = HIT
     for k in eating_ids:
         states[int(k)] = EAT
-
-
-import time
 
 
 class CatsDrawer(QWidget):
@@ -43,7 +41,7 @@ class CatsDrawer(QWidget):
             "food": QPixmap("images/food.png"),
         }
 
-        self.scale_factor = 70
+        self.scale_factor = 40
 
         # Resize images once
         for key, image in self.images.items():
@@ -107,11 +105,13 @@ class CatsDrawer(QWidget):
             # Calculate new position for smooth transition
             x = int(
                 self.prev_coordinates[0][i]
-                + (self.coordinates[0][i] - self.prev_coordinates[0][i]) * move_factor
+                + (self.coordinates[0][i] -
+                   self.prev_coordinates[0][i]) * move_factor
             )
             y = int(
                 self.prev_coordinates[1][i]
-                + (self.coordinates[1][i] - self.prev_coordinates[1][i]) * move_factor
+                + (self.coordinates[1][i] -
+                   self.prev_coordinates[1][i]) * move_factor
             )
             image_position = QPoint(x, y)
 
