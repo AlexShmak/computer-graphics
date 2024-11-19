@@ -1,16 +1,15 @@
-import sys
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QLabel
+from PyQt5.QtWidgets import QLabel, QWidget
 
 
 class ObstaclesDrawer(QWidget):
-    def __init__(self):
+    def __init__(self, height, width):
         super().__init__()
 
         self.label = QLabel(self)
         self.setMinimumSize(1500, 1000)
-        self.canvas = QtGui.QPixmap(self.width(), self.height())
+        self.canvas = QtGui.QPixmap(width, height)
         self.canvas.fill(Qt.white)
         self.label.setPixmap(self.canvas)
         self.start_x, self.start_y = None, None

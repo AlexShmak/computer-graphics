@@ -141,12 +141,16 @@ class MainWindow(QMainWindow):
             self.cats_panel.cats_drawer is not None
             or self.obst_panel.obstacles_drawer is not None
         ):
+            if self.obst_panel.obstacles_drawer is not None:
+                self.obst_panel.obst_frame.hide()
             self.is_paused = not self.is_paused
-            self.cats_panel.cats_drawer.is_paused = (
-                not self.cats_panel.cats_drawer.is_paused
-            )
+            if self.cats_panel.cats_drawer is not None:
+                self.cats_panel.cats_drawer.is_paused = (
+                    not self.cats_panel.cats_drawer.is_paused
+                )
             if self.is_paused:
                 self.pause_button.setText("Resume Animation")
+                self.obst_panel.obst_frame.hide()
                 self.cats_panel.cats_frame.show()
             else:
                 self.pause_button.setText("Pause Animation")
@@ -176,7 +180,9 @@ class MainWindow(QMainWindow):
         __obst_panel.obst_frame.setMinimumSize(1000, 500)
 
         # Create a new instance of ObstaclesDrawer for the user to draw obstacles
-        __obst_panel.obstacles_drawer = obstacles_drawer.ObstaclesDrawer()
+        __obst_panel.obstacles_drawer = obstacles_drawer.ObstaclesDrawer(
+            __obst_panel.obst_frame.height(), __obst_panel.obst_frame.width()
+        )
         __obst_panel.obst_layout.addWidget(__obst_panel.obstacles_drawer)
 
         # Update the layout to reflect changes
