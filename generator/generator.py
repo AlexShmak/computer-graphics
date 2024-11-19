@@ -16,7 +16,7 @@ class CatGenerator:
         self.__BORDER = {"x": x_border, "y": y_border}
         self.__RADIUS = R
         self.__FOOD_COUNT = 10  # number of food pieces on the map at the same time
-        self.__FOOD_SMELL_RADIUS = self.__RADIUS 
+        self.__FOOD_SMELL_RADIUS = self.__RADIUS
 
         # [[x_0, x_1, ...], [y_0, y_1, ...]]
         self.__cat_coordinates = np.vstack((x_array, y_array))

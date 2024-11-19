@@ -13,20 +13,19 @@ from algoritm.common import FIGHT, HISS, WALK, EAT, HIT, SLEEP
 from algoritm.states_update import update_states
 from generator.generator import CatGenerator
 
-
-def state2color(state: int) -> str:
-    if state == WALK:
-        return "green"
-    if state == HISS:
-        return "orange"
-    if state == EAT:
-        return "purple"
-    if state == HIT:
-        return "black"
-    if state == SLEEP:
-        return "blue"
-    else:
-        return "red"
+# def state2color(state: int) -> str:
+#     if state == WALK:
+#         return "green"
+#     if state == HISS:
+#         return "orange"
+#     if state == EAT:
+#         return "purple"
+#     if state == HIT:
+#         return "black"
+#     if state == SLEEP:
+#         return "blue"
+#     else:
+#         return "red"
 
 
 def update_extra_states(sleepy_ids, hit_ids, eating_ids, states):
@@ -43,7 +42,7 @@ def resize_image(image: QPixmap, n: int):
 
 
 class CatsDrawer(QWidget):
-    def __init__(self, n, generator: CatGenerator, r0: int, r1: int):
+    def __init__(self, n, generator: CatGenerator, r0: int, r1: int, lines: list):
         super().__init__()
 
         self.is_paused = False
@@ -59,11 +58,17 @@ class CatsDrawer(QWidget):
         self.walk_image = QPixmap("images/walk.png")
         self.food_image = QPixmap("images/food.png")
 
-        self.scale_factor = 50
+        self.scale_factor = 70
 
         self.generator = generator
         self.coordinates = self.generator.cats
         self.prev_coordinates = self.generator.cats
+
+        self.bad_borders = lines
+
+        if self.bad_borders:
+            for line in self.bad_borders:
+                self.generator.add_bad_border(line[0], line[1])
 
         update_states(self.coordinates, r0, r1, self.states)
 
@@ -86,17 +91,17 @@ class CatsDrawer(QWidget):
         painter = QPainter(self)
         pen = QPen()
         pen.setWidth(10)
+        pen.setColor(QColor("brown"))
+        painter.setPen(pen)
+
+        if self.bad_borders:
+            for bad_border in self.bad_borders:
+                painter.drawLine(*bad_border[0], *bad_border[1])
 
         # * Smoother animation
-        min_factor = 1
-        if self.cats_num <= 500:
-            max_factor = 101
-        if self.cats_num <= 5000:
-            max_factor = 51
-        else:
-            min_factor = 0
-            max_factor = 1
-        for factor in range(min_factor, max_factor):
+        min_fps = 1
+        max_fps = 17
+        for factor in range(min_fps, max_fps):
             for i in range(self.cats_num):
                 state = self.states[i]
                 # pen.setColor(QColor(state2color(state)))
@@ -140,15 +145,8 @@ class CatsDrawer(QWidget):
                     painter.drawPixmap(
                         image_position, resize_image(self.walk_image, self.scale_factor)
                     )
-                # else:
-                #     painter.drawPoint(QPoint(x, y))
 
         for j in range(self.food_num):
-            # pen.setColor(QColor("magenta"))
-            # painter.setPen(pen)
-            # painter.drawPoint(
-            #     QPoint(int(self.generator.food[0][j]), int(self.generator.food[1][j]))
-            # )
             image_position = QPoint(
                 int(self.generator.food[0][j]), int(self.generator.food[1][j])
             )
