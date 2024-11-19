@@ -42,7 +42,7 @@ class CatsDrawer(QWidget):
             "food": QPixmap("images/food.png"),
         }
 
-        self.scale_factor = 0.4  # Initial scale factor (1.0 means 100%)
+        self.scale_factor = 1.0  # Initial scale factor (1.0 means 100%)
         self.offset = QPoint(0, 0)  # Offset for dragging the scene
 
         # Resize images once based on scale_factor
@@ -205,13 +205,13 @@ class CatsDrawer(QWidget):
         for key, image in self.images.items():
             # For example, only resize if the scale factor is large enough
             if self.scale_factor <= 1.0:
-                scale = 1.0
+                scale = 0.6
             elif self.scale_factor <= 1.5:
-                scale = 1.5
+                scale = 0.9
             elif self.scale_factor <= 2.0:
-                scale = 2.0
+                scale = 1.3
             else:
-                scale = 2.5  # cap at 2.5x for example
+                scale = 2.0
 
             # Cache or use a pre-scaling strategy
             self.images[key] = image.scaled(
