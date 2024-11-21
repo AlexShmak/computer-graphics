@@ -24,7 +24,8 @@ jobs:
 
       - name: Lint with Ruff  
         run: |  
-          ruff --format=github --target-version=py310 .  
+          ruff check -v --fix
+          ruff format -v  
         continue-on-error: true  
 
       - name: Test with pytest  
