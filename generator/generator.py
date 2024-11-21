@@ -1,8 +1,6 @@
 from typing import Tuple
 import numpy as np
 import random
-import time
-import matplotlib.pyplot as plt
 
 
 class CatGenerator:
@@ -87,7 +85,9 @@ class CatGenerator:
 
         ### get sleepy cats
         sleepy_cats_count = random.randint(0, self.__CATS_COUNT // 10)
-        sleepy_cat_ids = np.random.choice(self.__cat_coordinates[0].shape[0], sleepy_cats_count, replace=False)
+        sleepy_cat_ids = np.random.choice(
+            self.__cat_coordinates[0].shape[0], sleepy_cats_count, replace=False
+        )
         self.__sleepy_cat_ids = sleepy_cat_ids
 
         # find points where cats want to move
@@ -105,7 +105,7 @@ class CatGenerator:
             if len(ids) == 0:
                 continue
 
-            self.__hit_cat_ids = ids
+            self.__hit_cat_ids = np.append(self.__hit_cat_ids, np.unique(np.where(ids)))
 
             # return back these cats (but with small offset otherwise they will get stuck at the border)
             new_xs[ids], new_ys[ids] = self.__offset_points(
@@ -122,7 +122,9 @@ class CatGenerator:
             new_xs[eating_cats_mask] = xs[eating_cats_mask]
             new_ys[eating_cats_mask] = ys[eating_cats_mask]
 
-            self.__eating_cat_ids = np.append(self.__eating_cat_ids, np.unique(np.where(eating_cats_mask)))
+            self.__eating_cat_ids = np.append(
+                self.__eating_cat_ids, np.unique(np.where(eating_cats_mask))
+            )
 
             # relocate food
             if np.any(eating_cats_mask):
@@ -135,7 +137,10 @@ class CatGenerator:
                 )
 
         # put some of the cats to sleep
-        new_xs[sleepy_cat_ids], new_ys[sleepy_cat_ids] = xs[sleepy_cat_ids], ys[sleepy_cat_ids]
+        new_xs[sleepy_cat_ids], new_ys[sleepy_cat_ids] = (
+            xs[sleepy_cat_ids],
+            ys[sleepy_cat_ids],
+        )
 
         # updates coordinates
         self.__cat_coordinates[0], self.__cat_coordinates[1] = new_xs, new_ys
@@ -189,32 +194,3 @@ class CatGenerator:
         y = ys[ids] + t[ids] * trajectories[1][ids]
 
         return (ids, x, y)
-
-
-x_border, y_border = 1000, 1000
-N = 20
-gen = CatGenerator(N=N, R=100, x_border=x_border, y_border=y_border)
-
-gen.add_bad_border((100, 100), (100, 800))
-gen.add_bad_border((800, 100), (800, 800))
-gen.add_bad_border((800, 800), (100, 800))
-gen.add_bad_border((100, 100), (800, 100))
-
-for i in range(10):
-    xs, ys = gen.cats
-    food_xs, food_ys = gen.food
-
-    # plt.scatter(xs, ys, c="red")
-    # plt.scatter(food_xs, food_ys, c="black")
-    # plt.title("Cats !!!")
-
-    # plt.plot([100, 100, 800, 800, 100], [100, 800, 800, 100, 100], "b-")
-    # plt.axis([0, x_border, 0, y_border])
-
-    # plt.savefig(f"{i}.png")
-    # plt.close()
-
-    start = time.perf_counter()
-    gen.update_cats()
-    print(f"#{i} time: {time.perf_counter() - start}")
-    print(len(gen.eating_cat_ids))
