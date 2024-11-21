@@ -22,11 +22,9 @@ jobs:
           python -m pip install --upgrade pip  
           pip install -r ci-req.txt
 
-      - name: Lint with Ruff  
-        run: |  
-          ruff check -v --fix
-          ruff format -v  
-        continue-on-error: true  
+      - uses: chartboost/ruff-action@v1
+        with:
+          args: 'format --check'
 
       - name: Test with pytest  
         run: |  
