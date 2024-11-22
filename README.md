@@ -10,7 +10,7 @@
 > - HIT (ударился)
 > - SLEEP (спит)
 
-
+![Cats (Ubuntu) 2024-11-22 16-30-20 (2)](https://github.com/user-attachments/assets/d5ea91f9-3200-4f97-bf48-954bcc5b5caa)
 
 ## Запуск приложения
 Необходимо установить Anaconda.
