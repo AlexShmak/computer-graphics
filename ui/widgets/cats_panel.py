@@ -5,7 +5,19 @@ from PyQt5.QtWidgets import (
 
 
 class CatsPanel(QWidget):
+    """
+    A class representing a panel for displaying cat-related widgets.
+    """
+
     def __init__(self):
+        """
+        Initializes the CatsPanel widget.
+
+        This constructor sets up the initial structure of the CatsPanel, including
+        creating a frame for displaying cat-related widgets and initializing layout
+        attributes for organizing the frame contents. Initially, no cats widget is
+        associated with the panel.
+        """
         super().__init__()
 
         # Initially, no cats widget is created

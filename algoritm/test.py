@@ -17,4 +17,4 @@ for i in range(7):
 
     finish = time.perf_counter()
 
-    print('Время работы: ' + str(finish - start))
+    print("Время работы: " + str(finish - start))
