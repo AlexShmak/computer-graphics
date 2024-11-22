@@ -106,7 +106,7 @@ class CatGenerator:
             if len(ids) == 0:
                 continue
 
-            self.__hit_cat_ids = ids
+            self.__hit_cat_ids = np.append(self.__hit_cat_ids, np.unique(np.where(ids)))
 
             # return back these cats (but with small offset otherwise they will get stuck at the border)
             new_xs[ids], new_ys[ids] = self.__offset_points(
