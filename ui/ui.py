@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QWidget,
-    QFrame,
 )
 
 # ? needed when importing `generator`
