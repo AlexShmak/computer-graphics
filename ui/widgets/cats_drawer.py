@@ -35,9 +35,9 @@ def update_extra_states(sleepy_ids, hit_ids, eating_ids, states):
     """
 
     for i in sleepy_ids:
-        states[i] = SLEEP
+        states[int(i)] = SLEEP
     for j in hit_ids:
-        states[j] = HIT
+        states[int(j)] = HIT
     for k in eating_ids:
         states[int(k)] = EAT
 
