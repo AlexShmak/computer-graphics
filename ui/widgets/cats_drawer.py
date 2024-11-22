@@ -15,16 +15,61 @@ from generator.generator import CatGenerator
 
 
 def update_extra_states(sleepy_ids, hit_ids, eating_ids, states):
+    """
+    Updates the states of cats that are sleeping, being hit, or eating food.
+
+    Parameters
+    ----------
+    sleepy_ids : array-like
+        The ids of cats that are sleeping.
+    hit_ids : array-like
+        The ids of cats that are being hit.
+    eating_ids : array-like
+        The ids of cats that are eating food.
+    states : array-like
+        The array of states of all cats.
+
+    Notes
+    -----
+    This function is used to update the states of cats when the generator updates the cats' positions.
+    """
+
     for i in sleepy_ids:
-        states[i] = SLEEP
+        states[int(i)] = SLEEP
     for j in hit_ids:
-        states[j] = HIT
+        states[int(j)] = HIT
     for k in eating_ids:
         states[int(k)] = EAT
 
 
 class CatsDrawer(QWidget):
+    """
+    Widget for drawing cats on a scene.
+    """
+
     def __init__(self, n, generator: CatGenerator, r0: int, r1: int, lines: list):
+        """
+        Initializes the CatsDrawer widget with the given number of cats and generator.
+
+        Parameters
+        ----------
+        n : int
+            The number of cats to draw.
+        generator : CatGenerator
+            The generator of the cats.
+        r0 : int
+            The minimum radius of the cats.
+        r1 : int
+            The maximum radius of the cats.
+        lines : list
+            The list of lines that define the bad borders.
+
+        Notes
+        -----
+        This function initializes the CatsDrawer widget with the given number of cats and generator.
+        It loads the images for the states of the cats, sets up the initial positions of the cats, and
+        starts a timer to update the positions of the cats every 30ms.
+        """
         super().__init__()
 
         self.is_paused = False
@@ -78,6 +123,22 @@ class CatsDrawer(QWidget):
         self.timer.start(30)  # Update every 30ms
 
     def paintEvent(self, event):
+        """
+        Paints the current state of the widget, including cats, bad borders, and food items.
+
+        Parameters
+        ----------
+        event : QPaintEvent
+            The paint event that triggers the drawing process.
+
+        Notes
+        -----
+        - This method handles the drawing of cats at their interpolated positions between frames
+        for smooth animation. The cat images are drawn based on their current states.
+        - Bad borders are drawn as lines with a specified pen color and width.
+        - Food items are drawn at their respective positions.
+        - The entire widget is bounded by a rectangle to depict the widget's size.
+        """
         painter = QPainter(self)
         pen = QPen()
         pen.setWidth(10)
@@ -148,22 +209,15 @@ class CatsDrawer(QWidget):
 
             painter.drawPixmap(image_position, self.images["food"])
 
-        # Get the widget's size
-        widget_size = self.size()  # Size of the widget (width, height)
-
-        # Create the top-left and bottom-right points of the bounding box
+        # Draw border
+        widget_size = self.size()
         top_left = QPoint(0, 0)
         bottom_right = QPoint(widget_size.width(), widget_size.height())
-
-        # Now, scale the bounding box (top-left and bottom-right) using the scale factor and offset
         scaled_top_left = self.scale_point(top_left)
         scaled_bottom_right = self.scale_point(bottom_right)
-
-        # Set the border color and width for the bounding box
         painter.setPen(QPen(QColor("black"), 2, Qt.SolidLine))
         painter.setBrush(Qt.NoBrush)
 
-        # Draw the rectangle (bounding box) around the whole widget
         painter.drawRect(
             scaled_top_left.x(),
             scaled_top_left.y(),
@@ -174,6 +228,18 @@ class CatsDrawer(QWidget):
         self.update()
 
     def update_positions(self, r0, r1):
+        """
+        Updates the positions of all cats, and calls the update_states function to update
+        the states of the cats based on their new positions.
+
+        Args:
+            r0 (int): The radius for FIGHT state.
+            r1 (int): The radius for HISS state.
+
+        If the widget is not paused, this function will ensure that the coordinates are
+        updated, and then call update_states and update_extra_states to update the states
+        of the cats. Finally, it will trigger a repaint of the entire widget.
+        """
         if not self.is_paused:
             # Ensure coordinates are updated
             self.prev_coordinates = self.coordinates
@@ -205,7 +271,7 @@ class CatsDrawer(QWidget):
         for key, image in self.images.items():
             # For example, only resize if the scale factor is large enough
             if self.scale_factor <= 1.0:
-                scale = 0.6
+                scale = 0.4
             elif self.scale_factor <= 1.5:
                 scale = 0.9
             elif self.scale_factor <= 2.0:

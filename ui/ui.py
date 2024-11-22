@@ -9,22 +9,40 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from widgets import (
+    cats_drawer,
+    cats_panel,
+    input_panel,
+    obstacles_drawer,
+    obstacles_panel,
+)
 
-# ? needed when importing `generator`
 sys.path.append(os.getcwd())
 
+
 from generator.generator import CatGenerator
-from widgets import (
-    input_panel,
-    cats_panel,
-    obstacles_panel,
-    cats_drawer,
-    obstacles_drawer,
-)
 
 
 class MainWindow(QMainWindow):
+    """
+    Main window for the application. Contains the input panel, cats panel, and obstacles panel.
+    """
+
     def __init__(self):
+        """
+        Constructor for the main window.
+
+        Sets up the window with a horizontal layout that contains the input panel,
+        the cats panel, and the obstacles panel.
+        The input panel contains fields to input the number of cats, the radius of the cats,
+        and the r0 and r1 values.
+        The cats panel contains a frame to display the cats.
+        The obstacles panel contains a frame to draw obstacles.
+        The window also contains buttons to start the animation, draw obstacles,
+        and pause/resume the animation.
+
+        :return: None
+        """
         super().__init__()
 
         self.generator = None
@@ -75,8 +93,15 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.container)
 
     def start_cats_animation(self):
-        # Get the number and radius from the QLineEdit
+        """
+        Starts the animation of the cats.
 
+        Gets the number of cats, radius, r0, and r1 from the QLineEdit and creates a new instance of CatGenerator with the specified number of cats.
+        If there is already a cats widget, removes it and replaces it with a new one.
+        Ensures the cats frame is resized to fit the cats widget.
+
+        :return: None
+        """
         self.cats_number = self.input_panel.number.text().strip()
         self.radius = self.input_panel.radius.text().strip()
         self.r0 = self.input_panel.r0.text().strip()
@@ -136,6 +161,17 @@ class MainWindow(QMainWindow):
             )  # Set the layout of the cats frame
 
     def toggle_pause(self):
+        """
+        Toggles the pause state of the animation.
+
+        This function pauses or resumes the animation for the cats and hides
+        or shows the obstacles frame accordingly. It also updates the text
+        on the pause button to indicate the current state (either "Pause Animation"
+        or "Resume Animation").
+
+        If the obstacles drawer is active, it hides the obstacles frame.
+        If the cats drawer is active, it toggles the paused state of the cats animation.
+        """
         if (
             self.cats_panel.cats_drawer is not None
             or self.obst_panel.obstacles_drawer is not None
@@ -156,6 +192,16 @@ class MainWindow(QMainWindow):
 
     def draw_obstacles(self):
         # Remove the cats frame if it exists, as we're switching to obstacles drawing
+        """
+        Starts the obstacles drawing mode.
+
+        This function hides the cats frame and shows the obstacles frame. It
+        then adds the obstacles frame to the layout and initializes the
+        obstacles layout if it hasn't been initialized. If there is already an
+        obstacles widget, it removes the old widget and creates a new instance
+        of ObstaclesDrawer for the user to draw obstacles. Finally, it updates
+        the layout to reflect changes.
+        """
         if self.cats_panel.cats_frame is not None:
             self.cats_panel.cats_frame.hide()
             self.obst_panel.obst_frame.show()
@@ -176,11 +222,13 @@ class MainWindow(QMainWindow):
 
         # Ensure the obstacles frame is resized to fit the obstacles widget
         self.input_panel.input_frame.setMaximumSize(300, self.height())
-        __obst_panel.obst_frame.setMinimumSize(1000, 500)
+        __obst_panel.obst_frame.setMaximumSize(self.width(), self.height())
 
         # Create a new instance of ObstaclesDrawer for the user to draw obstacles
         __obst_panel.obstacles_drawer = obstacles_drawer.ObstaclesDrawer(
-            __obst_panel.obst_frame.height(), __obst_panel.obst_frame.width()
+            # __obst_panel.obst_frame.height(), __obst_panel.obst_frame.width()
+            self.height(),
+            self.width(),
         )
         __obst_panel.obst_layout.addWidget(__obst_panel.obstacles_drawer)
 

@@ -9,7 +9,19 @@ from PyQt5.QtWidgets import (
 
 
 class InputPanel(QWidget):
+    """
+    Widget for input fields for the number of cats, radius of the cats, and r0 and r1 values.
+    """
+
     def __init__(self):
+        """
+        Constructor for the InputPanel widget.
+
+        Creates a frame with input fields for the number of cats, radius of the cats, and r0 and r1 values.
+        Also creates a layout to hold the input fields and labels.
+
+        :return: None
+        """
         super().__init__()
 
         self.input_fields = InputFields()
@@ -40,7 +52,18 @@ class InputPanel(QWidget):
 
 
 class InputFields(QWidget):
+    """
+    Widget for input fields for the number of cats, radius of the cats, and r0 and r1 values.
+    """
+
     def __init__(self):
+        """
+        Constructor for the InputFields widget.
+
+        Creates labels for the input fields, sets the input fields for getting number of cats, radius, and r0 and r1 values.
+
+        :return: None
+        """
         super().__init__()
 
         # Add labels for input fields
