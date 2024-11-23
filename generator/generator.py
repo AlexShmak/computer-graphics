@@ -95,6 +95,8 @@ class CatGenerator:
         new_xs = xs + self.__RADIUS * self.__cos_array
         new_ys = ys + self.__RADIUS * self.__sin_array
 
+        self.__hit_cat_ids = np.array([])
+
         ### look through all the bad borders
         for x0, y0, x1, y1 in self.__bad_border_coordinates:
             # find all intersections of cats with bad border
