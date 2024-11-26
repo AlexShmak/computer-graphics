@@ -25,7 +25,7 @@ for i in range(times):
 
     finish = time.perf_counter()
 
-    s += (finish - start)
+    s += finish - start
     print("Время работы: " + str(finish - start))
 average_time = s / times
 
