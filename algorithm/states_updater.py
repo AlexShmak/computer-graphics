@@ -1,6 +1,6 @@
 import faiss
 import numpy as np
-from algoritm.common import FIGHT, HISS, WALK
+from algorithm.common import FIGHT, HISS, WALK
 
 D = 2
 

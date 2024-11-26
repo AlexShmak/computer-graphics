@@ -9,8 +9,8 @@ from PyQt5.QtWidgets import QWidget
 
 sys.path.append(os.getcwd())
 
-from algoritm.common import EAT, FIGHT, HISS, HIT, SLEEP, WALK
-from algoritm.states_update import update_states
+from algorithm.common import EAT, FIGHT, HISS, HIT, SLEEP, WALK
+from algorithm.states_updater import update_states
 from generator.generator import CatGenerator
 
 
