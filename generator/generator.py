@@ -6,28 +6,33 @@ import numpy as np
 
 
 class AbstractCatGenerator:
-    @abstractmethod
     @property
+    @abstractmethod
+    def N(self):
+        pass
+
+    @property
+    @abstractmethod
     def cats(self):
         pass
 
-    @abstractmethod
     @property
+    @abstractmethod
     def hit_cat_ids(self):
         pass
 
-    @abstractmethod
     @property
+    @abstractmethod
     def sleepy_cat_ids(self):
         pass
 
-    @abstractmethod
     @property
+    @abstractmethod
     def eating_cat_ids(self):
         pass
 
-    @abstractmethod
     @property
+    @abstractmethod
     def food(self):
         pass
 
@@ -72,20 +77,24 @@ class CatGenerator(AbstractCatGenerator):
         self.__bad_border_coordinates = []
 
     @property
+    def N(self):
+        return self.__CATS_COUNT
+
+    @property
     def cats(self):
         return self.__cat_coordinates
 
     @property
     def hit_cat_ids(self):
-        return self.__hit_cat_ids
+        return self.__hit_cat_ids.astype(int)
 
     @property
     def sleepy_cat_ids(self):
-        return self.__sleepy_cat_ids
+        return self.__sleepy_cat_ids.astype(int)
 
     @property
     def eating_cat_ids(self):
-        return self.__eating_cat_ids
+        return self.__eating_cat_ids.astype(int)
 
     @property
     def food(self):
