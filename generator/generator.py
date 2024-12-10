@@ -1,10 +1,46 @@
+from abc import abstractmethod
 import random
 from typing import Tuple
 
 import numpy as np
 
 
-class CatGenerator:
+class AbstractCatGenerator:
+    @abstractmethod
+    @property
+    def cats(self):
+        pass
+
+    @abstractmethod
+    @property
+    def hit_cat_ids(self):
+        pass
+
+    @abstractmethod
+    @property
+    def sleepy_cat_ids(self):
+        pass
+
+    @abstractmethod
+    @property
+    def eating_cat_ids(self):
+        pass
+
+    @abstractmethod
+    @property
+    def food(self):
+        pass
+
+    @abstractmethod
+    def update_cats(self):
+        pass
+
+    @abstractmethod
+    def add_bad_border(self, a: Tuple[int, int], b: Tuple[int, int]):
+        pass
+
+
+class CatGenerator(AbstractCatGenerator):
     def __init__(self, N, R, x_border, y_border):
         assert R < x_border and R < y_border
 
