@@ -2,6 +2,7 @@ from abc import abstractmethod
 import numpy as np
 from numpy.typing import NDArray
 import time
+import random
 
 
 class BasicState:
@@ -23,7 +24,8 @@ class FakeCatAlgo(AbstractAlgo):
     """Fake algo just for testing purposes."""
 
     def get_states(self, cat_pos):
-        time.sleep(0.45)  # 4.5 delay
+        rand = random.uniform(0.25, 0.5)
+        time.sleep(rand)  # delay
         N = cat_pos[0].shape[0]
         states = np.random.choice(
             [BasicState.WALK, BasicState.HISS, BasicState.FIGHT], size=N

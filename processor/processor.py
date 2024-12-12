@@ -1,4 +1,3 @@
-from time import perf_counter, sleep
 from algorithm.algo import AbstractAlgo, BasicState
 from generator.generator import AbstractCatGenerator
 import multiprocessing as mp
@@ -44,7 +43,7 @@ class CatProcessor:
     """
 
     def __init__(
-        self, algo: AbstractAlgo, gen: AbstractCatGenerator, MAX_SIZE: int = 10
+        self, algo: AbstractAlgo, gen: AbstractCatGenerator, workers_count: int = 5, max_size: int = 10
     ):
         self.__algo = algo
         self.__gen = gen
@@ -52,8 +51,10 @@ class CatProcessor:
         self.__stop_event = mp.Event()
 
         # use queues to communicate between the generator and the algorithm processes.
-        self.__gen_queue = mp.Queue(MAX_SIZE)
-        self.__algo_queue = mp.Queue(MAX_SIZE)
+        self.__gen_queue = mp.Queue(max_size)
+        self.__algo_queue = mp.Queue(max_size)
+
+        self.__workers_count = workers_count
 
         # start workers
         self.__start_workers()
@@ -61,7 +62,9 @@ class CatProcessor:
     @property
     def bank_size(self):
         """Return the number of items in the generator and algorithm queues."""
-        assert not self.__stop_event.is_set(), "Can't get bank size when processor stopped."
+        assert (
+            not self.__stop_event.is_set()
+        ), "Can't get bank size when processor stopped."
 
         return (self.__gen_queue.qsize(), self.__algo_queue.qsize())
 
@@ -77,28 +80,43 @@ class CatProcessor:
         self.__stop_event.set()
 
         self.__gen_proc.kill()
-        self.__algo_proc.kill()
-
         self.__gen_proc.join()
-        self.__algo_proc.join()
+
+        for proc in self.__algo_proces:
+            proc.kill()
+            proc.join()
 
     def __start_workers(self):
         self.__gen_proc = mp.Process(
             target=self.__gen_worker,
-            args=(self.__gen.N, self.__gen_queue, self.__gen, self.__stop_event),
-            name="generator worker"
+            args=(self.__gen.N, self.__gen_queue, self.__gen),
+            name="generator worker",
         )
-        self.__algo_proc = mp.Process(
-            target=self.__algo_worker,
-            args=(self.__gen_queue, self.__algo_queue, self.__algo, self.__stop_event),
-            name="algorithm worker"
-        )
-
         self.__gen_proc.start()
-        self.__algo_proc.start()
 
-    def __gen_worker(self, N: int, q: mp.Queue, gen: AbstractCatGenerator, stop_event):
-        while not stop_event.is_set():
+        
+        # variable for algo workers sync
+        self.__last_result_num = mp.Value('i', 0)
+        self.__algo_proces: list[mp.Process] = []
+        
+        # start algo workers
+        for _ in range(self.__workers_count):
+            algo_proc = mp.Process(
+                target=self.__algo_worker,
+                args=(self.__gen_queue, self.__algo_queue, self.__algo, self.__last_result_num),
+                name="algorithm worker",
+            )
+            algo_proc.start()
+
+            self.__algo_proces.append(algo_proc)
+
+
+    def __gen_worker(self, N: int, q: mp.Queue, gen: AbstractCatGenerator):
+        data_num = 0 # last generated data number (need for sync)
+
+        while True:
+            data_num += 1
+
             # get new cat positions
             gen.update_cats()
             cats = gen.cats
@@ -117,17 +135,17 @@ class CatProcessor:
             cats_with_states = CatData(cats, states)
 
             # put data for algo
-            q.put(cats_with_states, timeout=1)
-
+            q.put((cats_with_states, data_num), timeout=1)
 
     def __algo_worker(
-        self, q_get: mp.Queue, q_put: mp.Queue, algo: AbstractAlgo, stop_event
+        self, q_get: mp.Queue, q_put: mp.Queue, algo: AbstractAlgo, last_data_id
     ):
-        while not stop_event.is_set():
-            cats_with_states = q_get.get(timeout=1.)
+        while True:
+            gen_worker_data = q_get.get(timeout=1.0)
 
             # unpacking
-            cats, states = cats_with_states.unpack()
+            cats, states = gen_worker_data[0].unpack()
+            my_data_id: int = gen_worker_data[1]
 
             # replace empty states with new algo states
             empty_indices = states == CatState.WALK
@@ -136,5 +154,10 @@ class CatProcessor:
             # pack
             result = CatData(cats, states)
 
+            # wait until worker can put data
+            while last_data_id.value != my_data_id - 1:
+                pass
+
             # put data for output
             q_put.put(result)
+            last_data_id.value += 1
