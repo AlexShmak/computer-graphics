@@ -135,13 +135,13 @@ class CatProcessor:
             cats_with_states = CatData(cats, states)
 
             # put data for algo
-            q.put((cats_with_states, data_num), timeout=1)
+            q.put((cats_with_states, data_num))
 
     def __algo_worker(
         self, q_get: mp.Queue, q_put: mp.Queue, algo: AbstractAlgo, last_data_id
     ):
         while True:
-            gen_worker_data = q_get.get(timeout=1.0)
+            gen_worker_data = q_get.get()
 
             # unpacking
             cats, states = gen_worker_data[0].unpack()
