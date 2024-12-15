@@ -15,12 +15,11 @@ states = [st.copy() for _ in range(7)]
 s = 0
 r0 = 60
 r1 = 100
-upd = StatesUpdater(1000, 1000, N, r0, r1, points, st)
+init_updater(1000,1000, N, r0, r1)
 times = 7
-upd.update()
 for i in range(times):
     start = time.perf_counter()
-    upd.update()
+    states_updater(points, states[i])
 
     finish = time.perf_counter()
 
