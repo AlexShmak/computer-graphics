@@ -43,7 +43,11 @@ class CatProcessor:
     """
 
     def __init__(
-        self, algo: AbstractAlgo, gen: AbstractCatGenerator, workers_count: int = 5, max_size: int = 10
+        self,
+        algo: AbstractAlgo,
+        gen: AbstractCatGenerator,
+        workers_count: int = 5,
+        max_size: int = 10,
     ):
         self.__algo = algo
         self.__gen = gen
@@ -94,25 +98,28 @@ class CatProcessor:
         )
         self.__gen_proc.start()
 
-        
         # variable for algo workers sync
-        self.__last_result_num = mp.Value('i', 0)
+        self.__last_result_num = mp.Value("i", 0)
         self.__algo_proces: list[mp.Process] = []
-        
+
         # start algo workers
         for _ in range(self.__workers_count):
             algo_proc = mp.Process(
                 target=self.__algo_worker,
-                args=(self.__gen_queue, self.__algo_queue, self.__algo, self.__last_result_num),
+                args=(
+                    self.__gen_queue,
+                    self.__algo_queue,
+                    self.__algo,
+                    self.__last_result_num,
+                ),
                 name="algorithm worker",
             )
             algo_proc.start()
 
             self.__algo_proces.append(algo_proc)
 
-
     def __gen_worker(self, N: int, q: mp.Queue, gen: AbstractCatGenerator):
-        data_num = 0 # last generated data number (need for sync)
+        data_num = 0  # last generated data number (need for sync)
 
         while True:
             data_num += 1

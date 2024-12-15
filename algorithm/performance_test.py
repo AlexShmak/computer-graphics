@@ -1,30 +1,29 @@
 import time
-import sys
-import os
 import numpy as np
+from algo import TaichiAlgo, BasicState
+import taichi as ti
 
+ti.init(arch=ti.gpu)
 
-from states_updater import *
-
-N = 5 * 10**6
+N = 500_000
 D = 2
 points = np.random.randint(0, 1000, size=(D, N))
-st = np.full(N, WALK, dtype=np.uint8)
-states = [st.copy() for _ in range(7)]
-
 s = 0
 r0 = 30
 r1 = 50
-init_updater(1000,1000, N, r0, r1)
+algo = TaichiAlgo(1000, 1000, N, r0, r1, 50)
 times = 7
+
 for i in range(times):
+    states = np.random.randint(BasicState.WALK, BasicState.FIGHT, size=(N))
+
     start = time.perf_counter()
-    states_updater(points, states[i])
+    algo.get_states(points, states)
 
     finish = time.perf_counter()
 
     s += finish - start
     print("Время работы: " + str(finish - start))
-average_time = s / times
 
+average_time = s / times
 print("\n Среднее время: " + str(average_time))

@@ -1,8 +1,10 @@
-from algorithm.algo import FakeCatAlgo
 from generator.generator import CatGenerator
 from processor.processor import CatProcessor, CatState
 import time
 import numpy as np
+import taichi as ti
+
+ti.init(arch=ti.gpu)
 
 N = 500_000
 gen = CatGenerator(N, 100, 10000, 10000)
