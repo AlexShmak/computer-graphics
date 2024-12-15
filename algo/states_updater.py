@@ -8,7 +8,7 @@ SLEEP = 3
 EAT = 4
 HIT = 5
 
-LIMIT_PER_CELL = 70
+LIMIT_PER_CELL = 50
 
 ti.init(arch=ti.gpu)
 

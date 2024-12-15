@@ -6,7 +6,7 @@ import numpy as np
 
 from states_updater import *
 
-N = 10 * 10**5
+N = 5 * 10**6
 D = 2
 points = np.random.randint(0, 1000, size=(D, N))
 st = np.full(N, WALK, dtype=np.uint8)
