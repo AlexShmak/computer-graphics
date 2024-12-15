@@ -8,6 +8,8 @@ SLEEP = 3
 EAT = 4
 HIT = 5
 
+LIMIT_PER_CELL = 70
+
 ti.init(arch=ti.gpu)
 
 X = NotImplemented
@@ -19,7 +21,7 @@ cell_size = NotImplemented
 cell_Xn = NotImplemented
 cell_Yn = NotImplemented
 
-circles_per_cell = NotImplemented
+cats_per_cell = NotImplemented
 column_sum = NotImplemented 
 prefix_sum = NotImplemented
 list_head = NotImplemented
@@ -63,17 +65,17 @@ def init_updater(
     cats_id = ti.field(dtype=ti.i32, shape=N)
 
 @ti.kernel
-def states_updater(cats: np.ndarray, states: np.ndarray):
+def states_updater(cats: ti.types.ndarray(), states: ti.types.ndarray()):
     cats_per_cell.fill(0)
     for i in range(N):
-        x_idx = ti.floor(cats[0][i] / cell_size, int)
-        y_idx = ti.floor(cats[1][i] / cell_size, int)
+        x_idx = ti.floor(cats[0, i] / cell_size, int)
+        y_idx = ti.floor(cats[1, i] / cell_size, int)
         ti.atomic_add(cats_per_cell[x_idx, y_idx], 1)
 
     for i in range(cell_Xn):
         cur_sum = 0
         for j in range(cell_Yn):
-            cur_sum += circles_per_cell[i, j]
+            cur_sum += cats_per_cell[i, j]
         column_sum[i] = cur_sum
 
     prefix_sum[0, 0] = 0
@@ -84,41 +86,44 @@ def states_updater(cats: np.ndarray, states: np.ndarray):
     for i in range(cell_Xn):
         for j in range(cell_Yn):
             if j == 0:
-                prefix_sum[i, j] += circles_per_cell[i, j]
+                prefix_sum[i, j] += cats_per_cell[i, j]
             else:
-                prefix_sum[i, j] = prefix_sum[i, j - 1] + circles_per_cell[i, j]
+                prefix_sum[i, j] = prefix_sum[i, j - 1] + cats_per_cell[i, j]
 
             linear_idx = i * cell_Yn + j
-            list_head[linear_idx] = prefix_sum[i, j] - circles_per_cell[i, j]
+            list_head[linear_idx] = prefix_sum[i, j] - cats_per_cell[i, j]
             list_cur[linear_idx] = list_head[linear_idx]
             list_tail[linear_idx] = prefix_sum[i, j]
 
     for i in range(N):
-        x_idx = ti.floor(cats[0][i] / cell_size, int)
-        y_idx = ti.floor(cats[1][i] / cell_size, int)
+        x_idx = ti.floor(cats[0, i] / cell_size, int)
+        y_idx = ti.floor(cats[1, i] / cell_size, int)
         linear_idx = x_idx * cell_Yn + y_idx
         cell_location = ti.atomic_add(list_cur[linear_idx], 1)
         cats_id[cell_location] = i
 
     for i in range(N):
-        x_idx = ti.floor(cats[0][i] / cell_size, int)
-        y_idx = ti.floor(cats[1][i] / cell_size, int)
+        x_idx = ti.floor(cats[0, i] / cell_size, int)
+        y_idx = ti.floor(cats[1, i] / cell_size, int)
         x_begin = max(x_idx - 1, 0)
         x_end = min(x_idx + 2, cell_Xn)
         y_begin = max(y_idx - 1, 0)
         y_end = min(y_idx + 2, cell_Yn)
 
         state = WALK
-
         for neigh_x in range(x_begin, x_end):
             for neigh_y in range(y_begin, y_end):
                 neigh_linear_idx = neigh_x * cell_Yn + neigh_y
+                processed = 0
                 for p in range(
                     list_head[neigh_linear_idx], list_tail[neigh_linear_idx]
                 ):
+                    if processed > LIMIT_PER_CELL:
+                        break
+                    processed += 1
                     j = cats_id[p]
                     if i != j:
-                        dist = ti.sqrt((cats[0][i]-cats[0][j])**2 + (cats[1][i]-cats[1][j])**2)  
+                        dist = ti.sqrt((cats[0, i]-cats[0, j])**2 + (cats[1, i]-cats[1, j])**2)  
                         if dist <= R0:
                             state = FIGHT
                             break
