@@ -14,7 +14,6 @@ algo = TaichiAlgo(X_BORDER, Y_BORDER, N, R0=30, R1=25)
 
 proc = CatProcessor(algo, gen, workers_count=2)
 proc.start()
-time.sleep(1)
 
 for _ in range(10):
     print("Bank size:", proc.bank_size)

@@ -44,7 +44,6 @@ class TaichiAlgo(AbstractAlgo):
         self.cell_Xn = int(X_border / self.cell_size) + 1
         self.cell_Yn = int(Y_border / self.cell_size) + 1
 
-    
     def start(self):
         self.cats_per_cell = ti.field(dtype=ti.i32, shape=(self.cell_Xn, self.cell_Yn))
         self.column_sum = ti.field(dtype=ti.i32, shape=self.cell_Xn)

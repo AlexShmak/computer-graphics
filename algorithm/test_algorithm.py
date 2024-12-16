@@ -4,6 +4,7 @@ from algo import TaichiAlgo
 import taichi as ti
 import pytest
 
+
 @pytest.fixture(
     params=[
         (500, 1000, 1000, 15, 25),  # N, Borders, R0, R1
@@ -17,6 +18,7 @@ def algo(request):
     N, X_BORDER, Y_BORDER, R0, R1 = request.param
 
     return TaichiAlgo(X_BORDER, Y_BORDER, N, R0, R1)
+
 
 def test_performance(algo: TaichiAlgo):
     ti.init(arch=ti.gpu)

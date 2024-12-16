@@ -80,7 +80,7 @@ class CatProcessor:
         return self.__algo_queue.get()
 
     def start(self):
-        assert self.__stop_event.is_set(), "Processor already have been started." 
+        assert self.__stop_event.is_set(), "Processor already have been started."
         self.__stop_event.clear()
 
         self.__start_workers()
