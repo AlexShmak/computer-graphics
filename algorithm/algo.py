@@ -14,7 +14,7 @@ class AbstractAlgo:
     """An algorithm that processes cats and returns their states."""
 
     @abstractmethod
-    def get_states(self, cats):
+    def get_states(self, cat_pos, out_states):
         """Process cats and return their states."""
         pass
 
@@ -28,7 +28,7 @@ class TaichiAlgo(AbstractAlgo):
         N: ti.i32,
         R0: ti.f32,
         R1: ti.f32,
-        limit_per_cell: int = 50,
+        limit_per_cell: int = 400,
     ):
         self.N = N
         self.R0 = R0
@@ -53,12 +53,12 @@ class TaichiAlgo(AbstractAlgo):
         self.cats_id = ti.field(dtype=ti.i32, shape=self.N)
 
     @ti.kernel
-    def get_states(self, cats: ti.types.ndarray(), out_states: ti.types.ndarray()):
+    def get_states(self, cat_pos: ti.types.ndarray(), out_states: ti.types.ndarray()):
 
         self.cats_per_cell.fill(0)
         for i in range(self.N):
-            x_idx = ti.floor(cats[0, i] / self.cell_size, int)
-            y_idx = ti.floor(cats[1, i] / self.cell_size, int)
+            x_idx = ti.floor(cat_pos[0, i] / self.cell_size, int)
+            y_idx = ti.floor(cat_pos[1, i] / self.cell_size, int)
             ti.atomic_add(self.cats_per_cell[x_idx, y_idx], 1)
 
         for i in range(self.cell_Xn):
@@ -91,15 +91,18 @@ class TaichiAlgo(AbstractAlgo):
                 self.list_tail[linear_idx] = self.prefix_sum[i, j]
 
         for i in range(self.N):
-            x_idx = ti.floor(cats[0, i] / self.cell_size, int)
-            y_idx = ti.floor(cats[1, i] / self.cell_size, int)
+            x_idx = ti.floor(cat_pos[0, i] / self.cell_size, int)
+            y_idx = ti.floor(cat_pos[1, i] / self.cell_size, int)
             linear_idx = x_idx * self.cell_Yn + y_idx
             cell_location = ti.atomic_add(self.list_cur[linear_idx], 1)
             self.cats_id[cell_location] = i
 
         for i in range(self.N):
-            x_idx = ti.floor(cats[0, i] / self.cell_size, int)
-            y_idx = ti.floor(cats[1, i] / self.cell_size, int)
+            if out_states[i] != BasicState.WALK and out_states[i] != BasicState.HISS and out_states[i] != BasicState.FIGHT:
+                continue  
+
+            x_idx = ti.floor(cat_pos[0, i] / self.cell_size, int)
+            y_idx = ti.floor(cat_pos[1, i] / self.cell_size, int)
             x_begin = max(x_idx - 1, 0)
             x_end = min(x_idx + 2, self.cell_Xn)
             y_begin = max(y_idx - 1, 0)
@@ -120,8 +123,8 @@ class TaichiAlgo(AbstractAlgo):
                         j = self.cats_id[p]
                         if i != j:
                             dist = ti.sqrt(
-                                (cats[0, i] - cats[0, j]) ** 2
-                                + (cats[1, i] - cats[1, j]) ** 2
+                                (cat_pos[0, i] - cat_pos[0, j]) ** 2
+                                + (cat_pos[1, i] - cat_pos[1, j]) ** 2
                             )
                             if dist <= self.R0:
                                 state = BasicState.FIGHT

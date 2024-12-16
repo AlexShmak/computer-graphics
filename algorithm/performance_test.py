@@ -11,13 +11,12 @@ points = np.random.randint(0, 1000, size=(D, N))
 s = 0
 r0 = 30
 r1 = 50
-algo = TaichiAlgo(1000, 1000, N, r0, r1, 50)
+algo = TaichiAlgo(1000, 1000, N, r0, r1, 400)
 times = 7
 
 for i in range(times):
-    states = np.random.randint(BasicState.WALK, BasicState.FIGHT, size=(N))
-
     start = time.perf_counter()
+    states = np.random.randint(1, 5, size=(N))
     algo.get_states(points, states)
 
     finish = time.perf_counter()
