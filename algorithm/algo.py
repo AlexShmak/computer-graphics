@@ -14,6 +14,10 @@ class AbstractAlgo:
     """An algorithm that processes cats and returns their states."""
 
     @abstractmethod
+    def start(self):
+        pass
+
+    @abstractmethod
     def get_states(self, cat_pos, out_states):
         """Process cats and return their states."""
         pass
@@ -40,13 +44,11 @@ class TaichiAlgo(AbstractAlgo):
         self.cell_Xn = int(X_border / self.cell_size) + 1
         self.cell_Yn = int(Y_border / self.cell_size) + 1
 
-        self.cats_per_cell = ti.field(
-            dtype=ti.i32, shape=(self.cell_Xn, self.cell_Yn)
-        )
+    
+    def start(self):
+        self.cats_per_cell = ti.field(dtype=ti.i32, shape=(self.cell_Xn, self.cell_Yn))
         self.column_sum = ti.field(dtype=ti.i32, shape=self.cell_Xn)
-        self.prefix_sum = ti.field(
-            dtype=ti.i32, shape=(self.cell_Xn, self.cell_Yn)
-        )
+        self.prefix_sum = ti.field(dtype=ti.i32, shape=(self.cell_Xn, self.cell_Yn))
         self.list_head = ti.field(dtype=ti.i32, shape=self.cell_Xn * self.cell_Yn)
         self.list_cur = ti.field(dtype=ti.i32, shape=self.cell_Xn * self.cell_Yn)
         self.list_tail = ti.field(dtype=ti.i32, shape=self.cell_Xn * self.cell_Yn)
@@ -54,7 +56,6 @@ class TaichiAlgo(AbstractAlgo):
 
     @ti.kernel
     def get_states(self, cat_pos: ti.types.ndarray(), out_states: ti.types.ndarray()):
-
         self.cats_per_cell.fill(0)
         for i in range(self.N):
             x_idx = ti.floor(cat_pos[0, i] / self.cell_size, int)
@@ -70,9 +71,7 @@ class TaichiAlgo(AbstractAlgo):
         self.prefix_sum[0, 0] = 0
         ti.loop_config(serialize=True)
         for i in range(1, self.cell_Xn):
-            self.prefix_sum[i, 0] = (
-                self.prefix_sum[i - 1, 0] + self.column_sum[i - 1]
-            )
+            self.prefix_sum[i, 0] = self.prefix_sum[i - 1, 0] + self.column_sum[i - 1]
 
         for i in range(self.cell_Xn):
             for j in range(self.cell_Yn):
@@ -98,8 +97,12 @@ class TaichiAlgo(AbstractAlgo):
             self.cats_id[cell_location] = i
 
         for i in range(self.N):
-            if out_states[i] != BasicState.WALK and out_states[i] != BasicState.HISS and out_states[i] != BasicState.FIGHT:
-                continue  
+            if (
+                out_states[i] != BasicState.WALK
+                and out_states[i] != BasicState.HISS
+                and out_states[i] != BasicState.FIGHT
+            ):
+                continue
 
             x_idx = ti.floor(cat_pos[0, i] / self.cell_size, int)
             y_idx = ti.floor(cat_pos[1, i] / self.cell_size, int)
