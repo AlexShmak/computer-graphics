@@ -1,9 +1,11 @@
-from algorithm.algo import AbstractAlgo, BasicState
+from time import perf_counter
+from algorithm.algo import AbstractAlgo, BasicState, TaichiAlgo
 from generator.generator import AbstractCatGenerator
 import multiprocessing as mp
 import numpy as np
 from numpy.typing import NDArray
 from dataclasses import dataclass
+import taichi as ti
 
 
 class CatState(BasicState):
@@ -53,15 +55,13 @@ class CatProcessor:
         self.__gen = gen
 
         self.__stop_event = mp.Event()
+        self.__stop_event.set()
 
         # use queues to communicate between the generator and the algorithm processes.
         self.__gen_queue = mp.Queue(max_size)
         self.__algo_queue = mp.Queue(max_size)
 
         self.__workers_count = workers_count
-
-        # start workers
-        self.__start_workers()
 
     @property
     def bank_size(self):
@@ -79,14 +79,21 @@ class CatProcessor:
 
         return self.__algo_queue.get()
 
+    def start(self):
+        assert self.__stop_event.is_set(), "Processor already have been started." 
+        self.__stop_event.clear()
+
+        self.__start_workers()
+
     def stop(self):
         """Stop worker processes."""
+        assert not self.__stop_event.is_set(), "Processor already have been stopped."
         self.__stop_event.set()
 
         self.__gen_proc.kill()
         self.__gen_proc.join()
 
-        for proc in self.__algo_proces:
+        for proc in self.__algo_processes:
             proc.kill()
             proc.join()
 
@@ -100,7 +107,7 @@ class CatProcessor:
 
         # variable for algo workers sync
         self.__last_result_num = mp.Value("i", 0)
-        self.__algo_proces: list[mp.Process] = []
+        self.__algo_processes: list[mp.Process] = []
 
         # start algo workers
         for _ in range(self.__workers_count):
@@ -116,7 +123,7 @@ class CatProcessor:
             )
             algo_proc.start()
 
-            self.__algo_proces.append(algo_proc)
+            self.__algo_processes.append(algo_proc)
 
     def __gen_worker(self, N: int, q: mp.Queue, gen: AbstractCatGenerator):
         data_num = 0  # last generated data number (need for sync)
@@ -147,6 +154,9 @@ class CatProcessor:
     def __algo_worker(
         self, q_get: mp.Queue, q_put: mp.Queue, algo: AbstractAlgo, last_data_id
     ):
+        ti.init(arch=ti.cpu)
+        algo.start()
+
         while True:
             gen_worker_data = q_get.get()
 
@@ -155,8 +165,9 @@ class CatProcessor:
             my_data_id: int = gen_worker_data[1]
 
             # replace empty states with new algo states
-            empty_indices = states == CatState.WALK
-            states[empty_indices] = algo.get_states(cats)[empty_indices]
+            start = perf_counter()
+            algo.get_states(cats, states)
+            print(perf_counter() - start)
 
             # pack
             result = CatData(cats, states)
