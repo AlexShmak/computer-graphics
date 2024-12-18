@@ -1,11 +1,15 @@
-from time import perf_counter
-from algorithm.algo import AbstractAlgo, BasicState, TaichiAlgo
-from generator.generator import AbstractCatGenerator
+"""Generator Module for Cats App"""
+
 import multiprocessing as mp
-import numpy as np
-from numpy.typing import NDArray
 from dataclasses import dataclass
+from time import perf_counter
+
+import numpy as np
 import taichi as ti
+from numpy.typing import NDArray
+
+from algorithm.algorithm import AbstractAlgo, BasicState
+from generator.generator import AbstractCatGenerator
 
 
 class CatState(BasicState):
@@ -46,13 +50,13 @@ class CatProcessor:
 
     def __init__(
         self,
-        algo: AbstractAlgo,
-        gen: AbstractCatGenerator,
+        algorithm: AbstractAlgo,
+        generator: AbstractCatGenerator,
         workers_count: int = 5,
         max_size: int = 10,
     ):
-        self.__algo = algo
-        self.__gen = gen
+        self.__algo = algorithm
+        self.__gen = generator
 
         self.__stop_event = mp.Event()
         self.__stop_event.set()
@@ -165,9 +169,7 @@ class CatProcessor:
             my_data_id: int = gen_worker_data[1]
 
             # replace empty states with new algo states
-            start = perf_counter()
             algo.get_states(cats, states)
-            print(perf_counter() - start)
 
             # pack
             result = CatData(cats, states)

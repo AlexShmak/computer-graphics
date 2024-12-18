@@ -1,7 +1,8 @@
+"""Algorithm Module for Cats App"""
+
 from abc import abstractmethod
+
 import taichi as ti
-import numpy as np
-from numpy.typing import NDArray
 
 
 class BasicState:
@@ -24,7 +25,7 @@ class AbstractAlgo:
 
 
 @ti.data_oriented
-class TaichiAlgo(AbstractAlgo):
+class CatAlgorithm(AbstractAlgo):
     def __init__(
         self,
         X_border: ti.f32,
@@ -135,6 +136,7 @@ class TaichiAlgo(AbstractAlgo):
                                 prob = 1.0 / (dist * dist)
                                 if ti.random() <= prob:
                                     state = BasicState.HISS
+                                    break
                     if state == BasicState.FIGHT:
                         break
                 if state == BasicState.FIGHT:
