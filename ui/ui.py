@@ -1,4 +1,4 @@
-"""Optimized Graphical User Interface (GUI) Module for Cats App"""
+"""Graphical User Interface (GUI) Module for Cats App"""
 
 import os
 import sys
@@ -17,7 +17,7 @@ from processor.processor import CatProcessor
 
 INTER_FRAME_NUM = 60  # Number of interpolated frames
 DOT_SIZE = 1
-RES = (1500,1000)
+RES = (1500, 1000)
 FPS = 60
 
 
@@ -37,10 +37,14 @@ def index_to_color(ind: int):
     return STATE_COLORS.get(ind, (255, 255, 255))  # Default to white
 
 
-def draw_dots(coords1, coords2, current_coords, states, window_surface):
+def draw_dots(coords1, coords2, current_coords, states, window_surface, obstacles):
     x1, y1 = coords1
     x2, y2 = coords2
     cx, cy = current_coords
+
+    # Draw obstacles (lines)
+    for start, end in obstacles:
+        pygame.draw.line(window_surface, (255, 0, 0), start, end, 2)
 
     # Determine whether to draw interpolated or final positions
     delta_x = np.abs(x2 - x1) >= RES[0] // 2
@@ -123,9 +127,17 @@ def run_ui():
     coords1, states1, coords2, states2 = None, None, None, None
     delta_dist = None
 
+    # Obstacle variables
+    obstacles = []
+    drawing_obstacles = False
+    start_pos = None
+
     def initialize_processor(n, r, r0, r1):
         nonlocal generator, processor, coords1, states1, coords2, states2, delta_dist
         generator = CatGenerator(n, r, *RES)
+        for obstacle in obstacles:
+            generator.add_bad_border(obstacle[0], obstacle[1])
+            print(obstacle)
         algo = CatAlgorithm(*RES, n, r0, r1)
         processor = CatProcessor(algo, generator)
         processor.start()
@@ -151,6 +163,7 @@ def run_ui():
                     sys.exit()
 
                 if event.ui_element == buttons["start"]:
+                    print(obstacles)
                     try:
                         n, r, r1, r0 = (int(field.get_text()) for field in input_fields)
                         if is_running:
@@ -165,9 +178,40 @@ def run_ui():
                 if event.ui_element == buttons["pause"] and is_running:
                     is_paused = not is_paused
 
+                # Disable "Draw obstacles" button when animation is running
+                if event.ui_element == buttons["draw_obstacles"] and not is_running:
+                    drawing_obstacles = not drawing_obstacles
+
             manager.process_events(event)
 
-        window_surface.blit(background_surface, (0, 0))
+            # Handle mouse events for drawing obstacles
+            if drawing_obstacles and not is_running:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    start_pos = event.pos
+                elif event.type == pygame.MOUSEMOTION:
+                    if start_pos:
+                        # Clear the screen to ensure the background is visible
+                        window_surface.blit(background_surface, (0, 0))
+
+                        # Draw the line dynamically as the mouse moves
+                        pygame.draw.line(
+                            window_surface, (255, 200, 200), start_pos, event.pos, 2
+                        )
+
+                        # Draw existing obstacles
+                        for start, end in obstacles:
+                            pygame.draw.line(
+                                window_surface, (255, 200, 200), start, end, 2
+                            )
+
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    if start_pos:
+                        end_pos = event.pos
+                        obstacles.append((start_pos, end_pos))  # Save the line
+                        start_pos = None  # Reset the start position after drawing
+
+        if not drawing_obstacles:
+            window_surface.blit(background_surface, (0, 0))  # Redraw the background
 
         if is_running and not is_paused:
             if current_frame < INTER_FRAME_NUM:
@@ -175,7 +219,9 @@ def run_ui():
             else:
                 current_coords = coords2
 
-            draw_dots(coords1, coords2, current_coords, states1, window_surface)
+            draw_dots(
+                coords1, coords2, current_coords, states1, window_surface, obstacles
+            )
 
             current_frame = (current_frame + 1) % INTER_FRAME_NUM
             if current_frame == 0:
@@ -184,10 +230,15 @@ def run_ui():
                 delta_dist = (coords2 - coords1) / INTER_FRAME_NUM
         else:
             if coords1 is not None:
-                draw_dots(coords1, coords2, current_coords, states1, window_surface)
+                draw_dots(
+                    coords1, coords2, current_coords, states1, window_surface, obstacles
+                )
 
-        # pygame.display.set_caption(f"Cats  |  {clock.get_fps():.2f} FPS")
-        print(clock.get_fps())
+        # Redraw all obstacles after updating the window
+        for start, end in obstacles:
+            pygame.draw.line(window_surface, (255, 0, 0), start, end, 2)
+
+        pygame.display.set_caption(f"Cats  |  {clock.get_fps():.2f}")
         manager.update(time_delta)
         manager.draw_ui(window_surface)
         pygame.display.update()
