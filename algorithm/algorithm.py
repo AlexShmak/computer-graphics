@@ -133,8 +133,8 @@ class CatAlgorithm(AbstractAlgo):
                                 state = BasicState.FIGHT
                                 break
                             elif dist <= self.R1:
-                                prob = 1.0 / (dist * dist)
-                                if ti.random() <= prob:
+                                prob = 1.0 / (dist**2)
+                                if ti.random(ti.f64) <= prob:
                                     state = BasicState.HISS
                                     break
                     if state == BasicState.FIGHT:
