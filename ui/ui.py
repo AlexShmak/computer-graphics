@@ -1,4 +1,4 @@
-"""Graphical User Interface (GUI) Module for Cats App"""
+"""Optimized Graphical User Interface (GUI) Module for Cats App"""
 
 import os
 import sys
@@ -6,6 +6,7 @@ import time
 
 import pygame
 import pygame_gui
+import numpy as np
 
 sys.path.append(os.getcwd())
 
@@ -14,46 +15,44 @@ from generator.generator import CatGenerator
 from processor.processor import CatProcessor
 
 
-INTER_FRAME_NUM = 30  # Number of interpolated frames
-# N = 1000  # Number of cat entities
+INTER_FRAME_NUM = 60  # Number of interpolated frames
 DOT_SIZE = 1
-RES = (2500,1300)
+RES = (1500,1000)
+FPS = 60
+
+
+# Precompute state-to-color mappings
+STATE_COLORS = {
+    1: (65, 105, 225),  # walk
+    2: (255, 140, 0),  # hiss
+    3: (255, 0, 0),  # fight
+    4: (0, 255, 127),  # eat
+    5: (128, 128, 128),  # hit
+    6: (106, 255, 255),  # sleep
+}
 
 
 def index_to_color(ind: int):
     """Map state index to a color."""
-    match ind:
-        case 1:  # walk
-            return (65, 105, 225)
-        case 2:  # hiss
-            return (255, 140, 0)
-        case 3:  # fight
-            return (255, 0, 0)
-        case 4:  # eat
-            return (0, 255, 127)
-        case 5:  # hit
-            return (128, 128, 128)
-        case 6:  # sleep
-            return (106, 255, 255)
+    return STATE_COLORS.get(ind, (255, 255, 255))  # Default to white
 
 
-def draw_dots(coords1, coords2, current_xs, current_ys, states, window_surface):
-    for ind, (x, y) in enumerate(zip(current_xs, current_ys)):
-        if (
-            abs(coords2[0][ind] - coords1[0][ind]) >= RES[0] // 2
-            or abs(coords2[1][ind] - coords1[1][ind]) >= RES[1] // 2
-        ):
-            pygame.draw.circle(
-                window_surface,
-                index_to_color(states[ind]),
-                (coords2[0][ind], coords2[1][ind]),
-                DOT_SIZE,
-            )
-            continue
+def draw_dots(coords1, coords2, current_coords, states, window_surface):
+    x1, y1 = coords1
+    x2, y2 = coords2
+    cx, cy = current_coords
+
+    # Determine whether to draw interpolated or final positions
+    delta_x = np.abs(x2 - x1) >= RES[0] // 2
+    delta_y = np.abs(y2 - y1) >= RES[1] // 2
+
+    for ind, (x, y, state) in enumerate(zip(cx, cy, states)):
+        x_draw = x2[ind] if delta_x[ind] or delta_y[ind] else int(x)
+        y_draw = y2[ind] if delta_x[ind] or delta_y[ind] else int(y)
         pygame.draw.circle(
             window_surface,
-            index_to_color(states[ind]),
-            (int(x), int(y)),
+            index_to_color(state),
+            (x_draw, y_draw),
             DOT_SIZE,
         )
 
@@ -61,7 +60,6 @@ def draw_dots(coords1, coords2, current_xs, current_ys, states, window_surface):
 def run_ui():
     """Function to run Pygame GUI"""
 
-    # Initialize Pygame
     pygame.init()
 
     pygame.display.set_caption("Cats")
@@ -72,108 +70,74 @@ def run_ui():
     clock = pygame.time.Clock()
     manager = pygame_gui.UIManager(RES)
 
-    # Labels
-    cats_number_label = pygame_gui.elements.UILabel(
-        relative_rect=pygame.Rect((50, 25), (300, 25)),
-        text="Number of cats",
-        manager=manager,
-    )
-    travel_distance_label = pygame_gui.elements.UILabel(
-        relative_rect=pygame.Rect((50, 85), (300, 25)),
-        text="Maximum travel distance",
-        manager=manager,
-    )
-    hissing_distance_label = pygame_gui.elements.UILabel(
-        relative_rect=pygame.Rect((50, 145), (300, 25)),
-        text="Cats start hissing at a distance",
-        manager=manager,
-    )
-    fighting_distance_label = pygame_gui.elements.UILabel(
-        relative_rect=pygame.Rect((50, 205), (300, 25)),
-        text="Cats start fighting at a distance",
-        manager=manager,
-    )
+    # UI Initialization
+    def create_label(text, pos):
+        return pygame_gui.elements.UILabel(
+            relative_rect=pygame.Rect(pos, (300, 25)),
+            text=text,
+            manager=manager,
+        )
 
-    # Input fields
-    cats_number_input_field = pygame_gui.elements.UITextEntryLine(
-        relative_rect=pygame.Rect((50, 50), (300, 30)), manager=manager
-    )
-    travel_distance_input_field = pygame_gui.elements.UITextEntryLine(
-        relative_rect=pygame.Rect((50, 110), (300, 30)), manager=manager
-    )
-    hissing_distance_input_field = pygame_gui.elements.UITextEntryLine(
-        relative_rect=pygame.Rect((50, 170), (300, 30)), manager=manager
-    )
-    fighting_distance_input_field = pygame_gui.elements.UITextEntryLine(
-        relative_rect=pygame.Rect((50, 230), (300, 30)), manager=manager
-    )
+    def create_input(pos):
+        return pygame_gui.elements.UITextEntryLine(
+            relative_rect=pygame.Rect(pos, (300, 30)), manager=manager
+        )
 
-    # Buttons
-    draw_obstacles_button = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect((50, 280), (300, 50)),
-        text="Draw obstacles",
-        manager=manager,
-    )
-    start_button = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect((50, 340), (300, 50)),
-        text="Start animation",
-        manager=manager,
-    )
-    pause_button = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect((50, 400), (300, 50)),
-        text="Pause/Resume",
-        manager=manager,
-    )
-    quit_button = pygame_gui.elements.UIButton(
-        relative_rect=pygame.Rect((50, 460), (300, 50)),
-        text="Quit",
-        manager=manager,
-    )
+    def create_button(text, pos):
+        return pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect(pos, (300, 50)),
+            text=text,
+            manager=manager,
+        )
 
-    # Flags and State Variables
+    labels = [
+        create_label("Number of cats", (50, 25)),
+        create_label("Maximum travel distance", (50, 85)),
+        create_label("Cats start hissing at a distance", (50, 145)),
+        create_label("Cats start fighting at a distance", (50, 205)),
+    ]
+
+    input_fields = [
+        create_input((50, 50)),
+        create_input((50, 110)),
+        create_input((50, 170)),
+        create_input((50, 230)),
+    ]
+
+    buttons = {
+        "draw_obstacles": create_button("Draw obstacles", (50, 280)),
+        "start": create_button("Start animation", (50, 340)),
+        "pause": create_button("Pause/Resume", (50, 400)),
+        "quit": create_button("Quit", (50, 460)),
+    }
+
+    # State Variables
     is_running = False
-    is_paused = False  # New flag to track pause state
+    is_paused = False
     current_frame = 0
 
-    # Initialize main components
     generator = CatGenerator(0, 0, *RES)
     algo = CatAlgorithm(*RES, 0, 5, 10, 1000)
     processor = CatProcessor(algo, generator)
 
-    coords1, states1 = None, None
-    coords2, states2 = None, None
-    delta_dist_x, delta_dist_y = None, None
+    coords1, states1, coords2, states2 = None, None, None, None
+    delta_dist = None
 
     def initialize_processor(n, r, r0, r1):
-        """Re-initialize processor, generator, and algorithm."""
-        nonlocal \
-            generator, \
-            processor, \
-            coords1, \
-            states1, \
-            coords2, \
-            states2, \
-            delta_dist_x, \
-            delta_dist_y
+        nonlocal generator, processor, coords1, states1, coords2, states2, delta_dist
         generator = CatGenerator(n, r, *RES)
-        algorithm = CatAlgorithm(*RES, n, r0, r1)
-        processor = CatProcessor(algorithm, generator)
+        algo = CatAlgorithm(*RES, n, r0, r1)
+        processor = CatProcessor(algo, generator)
         processor.start()
 
-        # Initialize the coordinates and states
         coords1, states1 = processor.data.unpack()
         coords2, states2 = processor.data.unpack()
-
-        # Safeguard interpolation deltas
-        delta_dist_x = (coords2[0] - coords1[0]) / INTER_FRAME_NUM
-        delta_dist_y = (coords2[1] - coords1[1]) / INTER_FRAME_NUM
+        delta_dist = (coords2 - coords1) / INTER_FRAME_NUM
 
     # Main Loop
     while True:
-        time_delta = clock.tick(30)
-        pygame.display.set_caption(f"Cats  |  {clock.get_fps():.2f} FPS")
+        time_delta = clock.tick(FPS) / 1000.0
 
-        # Event Handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -181,78 +145,49 @@ def run_ui():
                 sys.exit()
 
             if event.type == pygame_gui.UI_BUTTON_PRESSED:
-                if event.ui_element == quit_button:
+                if event.ui_element == buttons["quit"]:
                     pygame.quit()
                     processor.stop()
                     sys.exit()
 
-                if event.ui_element == start_button:
+                if event.ui_element == buttons["start"]:
                     try:
-                        n = int(cats_number_input_field.get_text())
-                        r = int(travel_distance_input_field.get_text())
-                        r1 = int(hissing_distance_input_field.get_text())
-                        r0 = int(fighting_distance_input_field.get_text())
-
+                        n, r, r1, r0 = (int(field.get_text()) for field in input_fields)
                         if is_running:
                             processor.stop()
                         initialize_processor(n, r, r0, r1)
                         is_running = True
-                        is_paused = False  # Ensure animation is not paused
+                        is_paused = False
                         current_frame = 0
-                        start_time = time.perf_counter()
                     except ValueError:
                         pass
 
-                if event.ui_element == pause_button:
-                    if is_running:
-                        is_paused = not is_paused  # Toggle the pause state
-                        start_time = time.perf_counter()
+                if event.ui_element == buttons["pause"] and is_running:
+                    is_paused = not is_paused
 
             manager.process_events(event)
 
-        # Background refresh
         window_surface.blit(background_surface, (0, 0))
 
-        if is_running and not is_paused:  # Only update the animation if not paused
-            # TODO: implement food coordinates in processor
-            if time.perf_counter() - start_time <= 0.1:
-                # Draw interpolated positions
-                if current_frame < INTER_FRAME_NUM:
-                    current_coords_x = coords1[0] + delta_dist_x * current_frame
-                    current_coords_y = coords1[1] + delta_dist_y * current_frame
-                else:
-                    current_coords_x, current_coords_y = coords2[0], coords2[1]
-                draw_dots(
-                    coords1,
-                    coords2,
-                    current_coords_x,
-                    current_coords_y,
-                    states1,
-                    window_surface,
-                )
-                start_time = time.perf_counter()
+        if is_running and not is_paused:
+            if current_frame < INTER_FRAME_NUM:
+                current_coords = coords1 + delta_dist * current_frame
             else:
-                continue
-            # Transition to next segment after interpolation
-            current_frame += 1
-            if current_frame >= INTER_FRAME_NUM:
+                current_coords = coords2
+
+            draw_dots(coords1, coords2, current_coords, states1, window_surface)
+
+            current_frame = (current_frame + 1) % INTER_FRAME_NUM
+            if current_frame == 0:
                 coords1, states1 = coords2, states2
                 coords2, states2 = processor.data.unpack()
-                delta_dist_x = (coords2[0] - coords1[0]) / INTER_FRAME_NUM
-                delta_dist_y = (coords2[1] - coords1[1]) / INTER_FRAME_NUM
-                current_frame = 0
+                delta_dist = (coords2 - coords1) / INTER_FRAME_NUM
         else:
             if coords1 is not None:
-                draw_dots(
-                    coords1,
-                    coords2,
-                    current_coords_x,
-                    current_coords_y,
-                    states1,
-                    window_surface,
-                )
+                draw_dots(coords1, coords2, current_coords, states1, window_surface)
 
-        # UI and Display Update
+        # pygame.display.set_caption(f"Cats  |  {clock.get_fps():.2f} FPS")
+        print(clock.get_fps())
         manager.update(time_delta)
         manager.draw_ui(window_surface)
         pygame.display.update()
