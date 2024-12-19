@@ -31,10 +31,11 @@ class CatData:
 
     coords: NDArray
     states: NDArray
+    food: NDArray
 
     def unpack(self):
-        """Unpacks the CatData into separate coordinate and state arrays."""
-        return self.coords, self.states
+        """Unpacks the CatData into separate coordinate, state and food arrays."""
+        return self.coords, self.states, self.food
 
 
 class CatProcessor:
@@ -134,6 +135,7 @@ class CatProcessor:
             # get new cat positions
             gen.update_cats()
             cats = gen.cats
+            food = gen.food
 
             # form states array
             states = np.full(N, CatState.WALK)
@@ -146,10 +148,10 @@ class CatProcessor:
                 states[gen.eating_cat_ids] = CatState.EAT
 
             # add states array to cats array
-            cats_with_states = CatData(cats, states)
+            cats_data = CatData(cats, states, food)
 
             # put data for algo
-            q.put((cats_with_states, data_num))
+            q.put((cats_data, data_num))
 
     def __algo_worker(
         self, q_get: mp.Queue, q_put: mp.Queue, algo: AbstractAlgo, last_data_id
@@ -161,7 +163,7 @@ class CatProcessor:
             gen_worker_data = q_get.get()
 
             # unpacking
-            cats, states = gen_worker_data[0].unpack()
+            cats, states, food = gen_worker_data[0].unpack()
             my_data_id: int = gen_worker_data[1]
 
             # replace empty states with new algo states
@@ -170,7 +172,7 @@ class CatProcessor:
             print(perf_counter() - start)
 
             # pack
-            result = CatData(cats, states)
+            result = CatData(cats, states, food)
 
             # wait until worker can put data
             while last_data_id.value != my_data_id - 1:

@@ -18,7 +18,8 @@ proc.start()
 for _ in range(10):
     print("Bank size:", proc.bank_size)
 
-    cats, states = proc.data.unpack()
+    cats, states, food = proc.data.unpack()
+    print("Food: ", food.size)
     print("Eating cats:", np.count_nonzero(states == CatState.EAT))
     print("Hit cats:", np.count_nonzero(states == CatState.HIT))
     print("Sleeping cats:", np.count_nonzero(states == CatState.SLEEP))
