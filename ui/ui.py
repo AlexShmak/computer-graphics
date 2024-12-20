@@ -120,9 +120,12 @@ def run_ui():
     is_paused = False
     current_frame = 0
 
-    generator = CatGenerator(0, 0, *RES)
-    algo = CatAlgorithm(*RES, 0, 5, 10, 1000)
-    processor = CatProcessor(algo, generator)
+    # generator = CatGenerator(0, 0, *RES)
+    # algo = CatAlgorithm(*RES, 0, 5, 10, 1000)
+    # processor = CatProcessor(algo, generator)
+
+    generator = None
+    processor = None
 
     coords1, states1, coords2, states2 = None, None, None, None
     delta_dist = None
@@ -138,8 +141,8 @@ def run_ui():
         for obstacle in obstacles:
             generator.add_bad_border(obstacle[0], obstacle[1])
             print(obstacle)
-        algo = CatAlgorithm(*RES, n, r0, r1)
-        processor = CatProcessor(algo, generator)
+        algorithm = CatAlgorithm(*RES, n, r0, r1)
+        processor = CatProcessor(algorithm, generator)
         processor.start()
 
         coords1, states1 = processor.data.unpack()
