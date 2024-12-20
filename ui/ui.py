@@ -2,39 +2,21 @@
 
 import os
 import sys
-import time
 
 import pygame
 import pygame_gui
 import numpy as np
 
-sys.path.append(os.getcwd())
-
 from algorithm.algorithm import CatAlgorithm
 from generator.generator import CatGenerator
 from processor.processor import CatProcessor
+from ui.resources import catstate_to_color, catstate_to_picture, init_pygame_pictures
 
 
 INTER_FRAME_NUM = 60  # Number of interpolated frames
 DOT_SIZE = 1
 RES = (1500, 1000)
 FPS = 60
-
-
-# Precompute state-to-color mappings
-STATE_COLORS = {
-    1: (65, 105, 225),  # walk
-    2: (255, 140, 0),  # hiss
-    3: (255, 0, 0),  # fight
-    4: (0, 255, 127),  # eat
-    5: (128, 128, 128),  # hit
-    6: (106, 255, 255),  # sleep
-}
-
-
-def index_to_color(ind: int):
-    """Map state index to a color."""
-    return STATE_COLORS.get(ind, (255, 255, 255))  # Default to white
 
 
 def draw_dots(coords1, coords2, current_coords, states, window_surface, obstacles):
@@ -55,7 +37,7 @@ def draw_dots(coords1, coords2, current_coords, states, window_surface, obstacle
         y_draw = y2[ind] if delta_x[ind] or delta_y[ind] else int(y)
         pygame.draw.circle(
             window_surface,
-            index_to_color(state),
+            catstate_to_color(state),
             (x_draw, y_draw),
             DOT_SIZE,
         )
@@ -70,6 +52,9 @@ def run_ui():
     window_surface = pygame.display.set_mode(RES)
     background_surface = pygame.Surface(RES)
     background_surface.fill((0, 0, 0))
+
+    # load cats pictures using pygame
+    init_pygame_pictures()
 
     clock = pygame.time.Clock()
     manager = pygame_gui.UIManager(RES)
@@ -120,12 +105,9 @@ def run_ui():
     is_paused = False
     current_frame = 0
 
-    # generator = CatGenerator(0, 0, *RES)
-    # algo = CatAlgorithm(*RES, 0, 5, 10, 1000)
-    # processor = CatProcessor(algo, generator)
-
-    generator = None
-    processor = None
+    generator: CatGenerator = None
+    algo: CatAlgorithm = None
+    processor: CatProcessor = None
 
     coords1, states1, coords2, states2 = None, None, None, None
     delta_dist = None
