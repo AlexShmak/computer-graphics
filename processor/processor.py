@@ -137,7 +137,7 @@ class CatProcessor:
 
             # get new cat positions
             gen.update_cats()
-            cats = gen.cats
+            cats = gen.cats.astype(int)
 
             # form states array
             states = np.full(N, CatState.WALK)

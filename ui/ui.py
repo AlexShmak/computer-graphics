@@ -136,29 +136,21 @@ def run_ui():
         time_delta = clock.tick(FPS) / 1000.0
 
         for event in pygame.event.get():
+            # --- GUI BUTTONS ---
             if event.type == pygame.QUIT:
-                pygame.quit()
-                processor.stop()
-                sys.exit()
+                exit_app(processor)
 
             if event.type == pygame_gui.UI_BUTTON_PRESSED:
-                if event.ui_element == buttons["quit"]:
-                    pygame.quit()
-                    processor.stop()
-                    sys.exit()
-
                 if event.ui_element == buttons["start"]:
-                    print(obstacles)
-                    try:
-                        n, r, r1, r0 = (int(field.get_text()) for field in input_fields)
-                        if is_running:
+                    if is_running:
                             processor.stop()
-                        initialize_processor(n, r, r0, r1)
-                        is_running = True
-                        is_paused = False
-                        current_frame = 0
-                    except ValueError:
-                        pass
+                    
+                    start_params = (int(field.get_text()) for field in input_fields)
+                    initialize_processor(*start_params)
+                    
+                    is_running = True
+                    is_paused = False
+                    current_frame = 0
 
                 if event.ui_element == buttons["pause"] and is_running:
                     is_paused = not is_paused
@@ -169,6 +161,7 @@ def run_ui():
 
             manager.process_events(event)
 
+            # --- MOUSE ---
             # Handle mouse events for drawing obstacles
             if drawing_obstacles and not is_running:
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -202,14 +195,15 @@ def run_ui():
             if current_frame < INTER_FRAME_NUM:
                 current_coords = coords1 + delta_dist * current_frame
             else:
-                current_coords = coords2
+                raise ValueError("Current frame can't be more than the max number of frames")
 
             draw_dots(
                 coords1, coords2, current_coords, states1, window_surface, obstacles
             )
 
-            current_frame = (current_frame + 1) % INTER_FRAME_NUM
-            if current_frame == 0:
+            current_frame = (current_frame + 1)
+            if current_frame >= 60:
+                current_frame = 0
                 coords1, states1 = coords2, states2
                 coords2, states2 = processor.data.unpack()
                 delta_dist = (coords2 - coords1) / INTER_FRAME_NUM
@@ -223,7 +217,14 @@ def run_ui():
         for start, end in obstacles:
             pygame.draw.line(window_surface, (255, 0, 0), start, end, 2)
 
-        pygame.display.set_caption(f"Cats  |  {clock.get_fps():.2f}")
+        pygame.display.set_caption(f"Cats  |  {int(clock.get_fps())}")
         manager.update(time_delta)
         manager.draw_ui(window_surface)
         pygame.display.update()
+
+
+def exit_app(processor: CatProcessor):
+    pygame.quit()
+    if processor:
+        processor.stop()
+    sys.exit()
