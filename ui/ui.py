@@ -7,12 +7,10 @@ import pygame
 import pygame_gui
 import numpy as np
 
-sys.path.append(os.getcwd())
-
 from algorithm.algorithm import CatAlgorithm
 from generator.generator import CatGenerator
 from processor.processor import CatProcessor
-from resources import catstate_to_color, catstate_to_picture
+from ui.resources import catstate_to_color, catstate_to_picture, init_pygame_pictures
 
 
 INTER_FRAME_NUM = 60  # Number of interpolated frames
@@ -54,6 +52,9 @@ def run_ui():
     window_surface = pygame.display.set_mode(RES)
     background_surface = pygame.Surface(RES)
     background_surface.fill((0, 0, 0))
+
+    # load cats pictures using pygame
+    init_pygame_pictures()
 
     clock = pygame.time.Clock()
     manager = pygame_gui.UIManager(RES)
@@ -104,9 +105,9 @@ def run_ui():
     is_paused = False
     current_frame = 0
 
-    generator = CatGenerator(0, 0, *RES)
-    algo = CatAlgorithm(*RES, 0, 5, 10, 1000)
-    processor = CatProcessor(algo, generator)
+    generator: CatGenerator = None
+    algo: CatAlgorithm = None
+    processor: CatProcessor = None
 
     coords1, states1, coords2, states2 = None, None, None, None
     delta_dist = None
