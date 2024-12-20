@@ -2,24 +2,31 @@
 
 import os
 import sys
+from time import perf_counter
 
 import pygame
 import pygame_gui
 import numpy as np
+
+sys.path.append(os.getcwd())
 
 from algorithm.algorithm import CatAlgorithm
 from generator.generator import CatGenerator
 from processor.processor import CatProcessor
 from ui.resources import catstate_to_color, catstate_to_picture, init_pygame_pictures
 
-
 INTER_FRAME_NUM = 60  # Number of interpolated frames
-DOT_SIZE = 1
+TIME_DELTA = 0.045
+DOT_SIZE = 10
 RES = (1500, 1000)
 FPS = 60
+DRAWING_STYLES = {"dots": catstate_to_color, "images": catstate_to_picture}
+IMAGE_SCALE = (40, 40)
 
 
-def draw_dots(coords1, coords2, current_coords, states, window_surface, obstacles):
+def draw_dots(
+    coords1, coords2, current_coords, states, window_surface, obstacles, style
+):
     x1, y1 = coords1
     x2, y2 = coords2
     cx, cy = current_coords
@@ -35,12 +42,25 @@ def draw_dots(coords1, coords2, current_coords, states, window_surface, obstacle
     for ind, (x, y, state) in enumerate(zip(cx, cy, states)):
         x_draw = x2[ind] if delta_x[ind] or delta_y[ind] else int(x)
         y_draw = y2[ind] if delta_x[ind] or delta_y[ind] else int(y)
-        pygame.draw.circle(
-            window_surface,
-            catstate_to_color(state),
-            (x_draw, y_draw),
-            DOT_SIZE,
-        )
+        if style == "dots":
+            pygame.draw.circle(
+                window_surface,
+                DRAWING_STYLES[style](state),
+                (x_draw, y_draw),
+                DOT_SIZE,
+            )
+        else:
+            window_surface.blit(
+                pygame.transform.scale(DRAWING_STYLES[style](state), IMAGE_SCALE),
+                (x_draw, y_draw),
+            )
+
+
+def exit_app(processor: CatProcessor):
+    pygame.quit()
+    if processor:
+        processor.stop()
+    sys.exit()
 
 
 def run_ui():
@@ -97,19 +117,21 @@ def run_ui():
         "draw_obstacles": create_button("Draw obstacles", (50, 280)),
         "start": create_button("Start animation", (50, 340)),
         "pause": create_button("Pause/Resume", (50, 400)),
-        "quit": create_button("Quit", (50, 460)),
+        "chage_style": create_button("Change style", (50, 460)),
+        "quit": create_button("Quit", (50, 520)),
     }
 
     # State Variables
     is_running = False
     is_paused = False
     current_frame = 0
+    current_style = "dots"
 
     generator: CatGenerator = None
-    algo: CatAlgorithm = None
+    algorithm: CatAlgorithm = None
     processor: CatProcessor = None
 
-    coords1, states1, coords2, states2 = None, None, None, None
+    coords1, states1, coords2, states2, current_coords = None, None, None, None, None
     delta_dist = None
 
     # Obstacle variables
@@ -117,12 +139,15 @@ def run_ui():
     drawing_obstacles = False
     start_pos = None
 
+    # Frames update
+    last_frame_time = 0
+
     def initialize_processor(n, r, r0, r1):
         nonlocal generator, processor, coords1, states1, coords2, states2, delta_dist
         generator = CatGenerator(n, r, *RES)
         for obstacle in obstacles:
             generator.add_bad_border(obstacle[0], obstacle[1])
-            print(obstacle)
+
         algo = CatAlgorithm(*RES, n, r0, r1)
         processor = CatProcessor(algo, generator)
         processor.start()
@@ -134,6 +159,12 @@ def run_ui():
     # Main Loop
     while True:
         time_delta = clock.tick(FPS) / 1000.0
+        current_time = perf_counter()
+        if current_time - last_frame_time >= TIME_DELTA:
+            last_frame_time = current_time  # Update the last frame time
+            frame_update = True
+        else:
+            frame_update = False
 
         for event in pygame.event.get():
             # --- GUI BUTTONS ---
@@ -141,16 +172,22 @@ def run_ui():
                 exit_app(processor)
 
             if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.ui_element == buttons["quit"]:
+                    exit_app(processor)
+
                 if event.ui_element == buttons["start"]:
                     if is_running:
-                            processor.stop()
-                    
-                    start_params = (int(field.get_text()) for field in input_fields)
-                    initialize_processor(*start_params)
-                    
-                    is_running = True
-                    is_paused = False
-                    current_frame = 0
+                        processor.stop()
+                    try:
+                        start_params = (int(field.get_text()) for field in input_fields)
+
+                        initialize_processor(*start_params)
+
+                        is_running = True
+                        is_paused = False
+                        current_frame = 0
+                    except ValueError:
+                        continue
 
                 if event.ui_element == buttons["pause"] and is_running:
                     is_paused = not is_paused
@@ -158,6 +195,12 @@ def run_ui():
                 # Disable "Draw obstacles" button when animation is running
                 if event.ui_element == buttons["draw_obstacles"] and not is_running:
                     drawing_obstacles = not drawing_obstacles
+
+                if event.ui_element == buttons["chage_style"]:
+                    if current_style == "dots":
+                        current_style = "images"
+                    else:
+                        current_style = "dots"
 
             manager.process_events(event)
 
@@ -191,26 +234,41 @@ def run_ui():
         if not drawing_obstacles:
             window_surface.blit(background_surface, (0, 0))  # Redraw the background
 
-        if is_running and not is_paused:
+        if is_running and not is_paused and frame_update:
             if current_frame < INTER_FRAME_NUM:
                 current_coords = coords1 + delta_dist * current_frame
             else:
-                raise ValueError("Current frame can't be more than the max number of frames")
+                raise ValueError(
+                    "Current frame can't be more than the max number of frames"
+                )
 
             draw_dots(
-                coords1, coords2, current_coords, states1, window_surface, obstacles
+                coords1,
+                coords2,
+                current_coords,
+                states1,
+                window_surface,
+                obstacles,
+                current_style,
             )
 
-            current_frame = (current_frame + 1)
-            if current_frame >= 60:
+            current_frame = current_frame + 1
+            if current_frame >= INTER_FRAME_NUM:
                 current_frame = 0
                 coords1, states1 = coords2, states2
                 coords2, states2 = processor.data.unpack()
                 delta_dist = (coords2 - coords1) / INTER_FRAME_NUM
+
         else:
-            if coords1 is not None:
+            if current_coords is not None:
                 draw_dots(
-                    coords1, coords2, current_coords, states1, window_surface, obstacles
+                    coords1,
+                    coords2,
+                    current_coords,
+                    states1,
+                    window_surface,
+                    obstacles,
+                    current_style,
                 )
 
         # Redraw all obstacles after updating the window
@@ -221,10 +279,3 @@ def run_ui():
         manager.update(time_delta)
         manager.draw_ui(window_surface)
         pygame.display.update()
-
-
-def exit_app(processor: CatProcessor):
-    pygame.quit()
-    if processor:
-        processor.stop()
-    sys.exit()
