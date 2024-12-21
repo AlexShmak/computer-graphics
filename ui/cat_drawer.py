@@ -2,7 +2,7 @@ import pygame
 import numpy as np
 from ui.resources import catstate_to_color, catstate_to_picture
 
-DOT_SIZE = 10
+DOT_SIZE = 1
 IMAGE_SCALE = (40, 40)
 RES = (1500, 1000)
 
@@ -29,11 +29,11 @@ class DrawStyle:
 
 
 def draw_cats(
-    coords1, coords2, current_coords, states, window_surface, obstacles, draw_method
+    coords1, coords2, intermediate_coords, states, window_surface, obstacles, draw_method
 ):
     x1, y1 = coords1
     x2, y2 = coords2
-    cx, cy = current_coords
+    cx, cy = intermediate_coords
 
     # Draw obstacles (lines)
     for start, end in obstacles:
@@ -43,8 +43,10 @@ def draw_cats(
     delta_x = np.abs(x2 - x1) >= RES[0] // 2
     delta_y = np.abs(y2 - y1) >= RES[1] // 2
 
-    for ind, (x, y, state) in enumerate(zip(cx, cy, states)):
-        x_draw = x2[ind] if delta_x[ind] or delta_y[ind] else int(x)
-        y_draw = y2[ind] if delta_x[ind] or delta_y[ind] else int(y)
+    draw_final = np.logical_or(delta_x, delta_y)
 
-        draw_method(window_surface, x_draw, y_draw, state)
+    x_draw = np.where(draw_final, x2, np.array(cx, dtype=int))
+    y_draw = np.where(draw_final, y2, np.array(cy, dtype=int))
+
+    for (x, y, state) in zip(x_draw, y_draw, states):
+        draw_method(window_surface, int(x), int(y), state)

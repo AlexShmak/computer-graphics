@@ -136,7 +136,7 @@ def run_ui():
             if event.type == pygame.QUIT:
                 exit_app(processor)
 
-            if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            elif event.type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == buttons["quit"]:
                     exit_app(processor)
 
