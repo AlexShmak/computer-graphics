@@ -1,24 +1,23 @@
 """Graphical User Interface (GUI) Module for Cats App"""
 
+import math
 import os
 import sys
-from time import perf_counter
 
-import numpy as np
+# from time import perf_counter
 import pygame
 import pygame_gui
-import math
 
 sys.path.append(os.getcwd())
 
 from algorithm.algorithm import CatAlgorithm
 from generator.generator import CatGenerator
 from processor.processor import CatProcessor, CatState
+from ui.cat_drawer import RES, DrawStyle, draw_cats
 from ui.resources import init_pygame_pictures
-from ui.cat_drawer import draw_cats, RES, DrawStyle
 
 INTER_FRAME_NUM = 60  # Number of interpolated frames
-TIME_DELTA = 0.01
+# TIME_DELTA = 0.05
 FPS = 60
 
 
@@ -106,14 +105,13 @@ def run_ui():
     start_pos = None
 
     # Frames update
-    last_frame_time = 0
+    # last_frame_time = 0
 
     def initialize_processor(n, r, r0, r1):
         nonlocal generator, processor, coords1, states1, coords2, states2, delta_dist
         generator = CatGenerator(n, r, *RES)
         for obstacle in obstacles:
             generator.add_bad_border(obstacle[0], obstacle[1])
-            print(obstacle)
         algorithm = CatAlgorithm(*RES, n, r0, r1)
         processor = CatProcessor(algorithm, generator)
         processor.start()
@@ -125,19 +123,19 @@ def run_ui():
     # Main Loop
     while True:
         time_delta = clock.tick(FPS) / 1000.0
-        current_time = perf_counter()
-        if current_time - last_frame_time >= TIME_DELTA:
-            last_frame_time = current_time  # Update the last frame time
-            frame_update = True
-        else:
-            frame_update = False
+        # current_time = perf_counter()
+        # if current_time - last_frame_time >= TIME_DELTA:
+        #     last_frame_time = current_time  # Update the last frame time
+        #     frame_update = True
+        # else:
+        #     frame_update = False
 
         for event in pygame.event.get():
             # --- GUI BUTTONS ---
             if event.type == pygame.QUIT:
                 exit_app(processor)
 
-            elif event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == buttons["quit"]:
                     exit_app(processor)
 
@@ -169,45 +167,38 @@ def run_ui():
                     else:
                         current_style = DrawStyle.PICTURES
 
-            manager.process_events(event)
-
             # --- MOUSE ---
-            # Handle mouse events for drawing obstacles
             if drawing_obstacles and not is_running:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     start_pos = event.pos
-                elif event.type == pygame.MOUSEMOTION:
-                    if start_pos:
-                        # Clear the screen to ensure the background is visible
-                        window_surface.blit(background_surface, (0, 0))
+                elif event.type == pygame.MOUSEMOTION and start_pos:
+                    end_pos = event.pos
 
-                        # Draw the line dynamically as the mouse moves
-                        pygame.draw.line(
-                            window_surface, (255, 200, 200), start_pos, event.pos, 2
-                        )
+                elif event.type == pygame.MOUSEBUTTONUP and start_pos:
+                    end_pos = event.pos
+                    dist = math.sqrt(
+                        (start_pos[0] - end_pos[0]) ** 2
+                        + (start_pos[1] - end_pos[1]) ** 2
+                    )
+                    if dist > 1:
+                        obstacles.append((start_pos, end_pos))
+                    start_pos = None
 
-                        # Draw existing obstacles
-                        for start, end in obstacles:
-                            pygame.draw.line(
-                                window_surface, (255, 200, 200), start, end, 2
-                            )
+            manager.process_events(event)
 
-                elif event.type == pygame.MOUSEBUTTONUP:
-                    if start_pos:
-                        end_pos = event.pos
-                        dist = math.sqrt(
-                            (start_pos[0] - end_pos[0]) ** 2
-                            + (start_pos[1] - end_pos[1]) ** 2
-                        )
+        # Clear the screen
+        window_surface.blit(background_surface, (0, 0))
 
-                        if dist > 1:
-                            obstacles.append((start_pos, end_pos))  # Save the line
-                        start_pos = None  # Reset the start position after drawing
+        # Draw dynamically if in obstacle drawing mode
+        if drawing_obstacles and start_pos:
+            mouse_pos = pygame.mouse.get_pos()
+            pygame.draw.line(window_surface, (255, 200, 200), start_pos, mouse_pos, 2)
 
-        if not drawing_obstacles:
-            window_surface.blit(background_surface, (0, 0))  # Redraw the background
+        # Draw existing obstacles
+        for start, end in obstacles:
+            pygame.draw.line(window_surface, (255, 0, 0), start, end, 2)
 
-        if is_running and not is_paused and frame_update:
+        if is_running and not is_paused:
             if current_frame < INTER_FRAME_NUM:
                 current_coords = coords1 + delta_dist * current_frame
             else:
