@@ -148,7 +148,6 @@ def run_ui():
                     sys.exit()
 
                 if event.ui_element == buttons["start"]:
-                    print(obstacles)
                     try:
                         n, r, r1, r0 = (int(field.get_text()) for field in input_fields)
                         if is_running:
