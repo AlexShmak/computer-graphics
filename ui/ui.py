@@ -15,6 +15,7 @@ from ui.resources import catstate_to_color, catstate_to_picture, init_pygame_pic
 
 INTER_FRAME_NUM = 60  # Number of interpolated frames
 DOT_SIZE = 1
+PICTURE_SIZE = 32
 RES = (1500, 1000)
 FPS = 60
 
@@ -41,6 +42,27 @@ def draw_dots(coords1, coords2, current_coords, states, window_surface, obstacle
             (x_draw, y_draw),
             DOT_SIZE,
         )
+
+def draw_pictures(coords1, coords2, current_coords, states, window_surface, obstacles):
+    """Draws obstacles and cat positions on the window surface."""
+    x1, y1 = coords1
+    x2, y2 = coords2
+    cx, cy = current_coords
+
+    # Draw obstacles (lines)
+    for start, end in obstacles:
+        pygame.draw.line(window_surface, (255, 0, 0), start, end, 2)
+
+    # Determine whether to draw interpolated or final positions
+    delta_x = np.abs(x2 - x1) >= RES[0] // 2
+    delta_y = np.abs(y2 - y1) >= RES[1] // 2
+
+    for ind, (x, y, state) in enumerate(zip(cx, cy, states)):
+        x_draw = x2[ind] if delta_x[ind] or delta_y[ind] else int(x)
+        y_draw = y2[ind] if delta_x[ind] or delta_y[ind] else int(y)
+
+        scaled_image = pygame.transform.scale(catstate_to_picture(state), (PICTURE_SIZE, PICTURE_SIZE))
+        window_surface.blit(scaled_image, (x_draw, y_draw))
 
 
 def run_ui():
@@ -197,7 +219,7 @@ def run_ui():
             else:
                 raise ValueError("Current frame can't be more than the max number of frames")
 
-            draw_dots(
+            draw_pictures(
                 coords1, coords2, current_coords, states1, window_surface, obstacles
             )
 
@@ -209,7 +231,7 @@ def run_ui():
                 delta_dist = (coords2 - coords1) / INTER_FRAME_NUM
         else:
             if coords1 is not None:
-                draw_dots(
+                draw_pictures(
                     coords1, coords2, current_coords, states1, window_surface, obstacles
                 )
 
