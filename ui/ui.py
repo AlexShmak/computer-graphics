@@ -18,7 +18,7 @@ from ui.resources import init_pygame_pictures
 from ui.cat_drawer import draw_cats, RES, DrawStyle
 
 INTER_FRAME_NUM = 60  # Number of interpolated frames
-TIME_DELTA = 0.001
+TIME_DELTA = 0.01
 FPS = 60
 
 
@@ -152,6 +152,7 @@ def run_ui():
                         is_running = True
                         is_paused = False
                         current_frame = 0
+                        drawing_obstacles = False
                     except ValueError:
                         continue
 
@@ -194,7 +195,10 @@ def run_ui():
                 elif event.type == pygame.MOUSEBUTTONUP:
                     if start_pos:
                         end_pos = event.pos
-                        dist = math.sqrt((start_pos[0] - end_pos[0])**2 - (start_pos[1] - end_pos[1])**2)
+                        dist = math.sqrt(
+                            (start_pos[0] - end_pos[0]) ** 2
+                            + (start_pos[1] - end_pos[1]) ** 2
+                        )
 
                         if dist > 1:
                             obstacles.append((start_pos, end_pos))  # Save the line
