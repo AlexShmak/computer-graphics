@@ -1,6 +1,6 @@
 import time
 import numpy as np
-from algo import TaichiAlgo
+from algorithm.algorithm import CatAlgorithm
 import taichi as ti
 import pytest
 
@@ -17,10 +17,10 @@ import pytest
 def algo(request):
     N, X_BORDER, Y_BORDER, R0, R1 = request.param
 
-    return TaichiAlgo(X_BORDER, Y_BORDER, N, R0, R1)
+    return CatAlgorithm(X_BORDER, Y_BORDER, N, R0, R1)
 
 
-def test_performance(algo: TaichiAlgo):
+def test_performance(algo: CatAlgorithm):
     ti.init(arch=ti.gpu)
 
     points = np.random.randint(0, 1000, size=(2, algo.N))
