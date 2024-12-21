@@ -4,21 +4,21 @@ import os
 import sys
 from time import perf_counter
 
+import numpy as np
 import pygame
 import pygame_gui
-import numpy as np
 import math
 
 sys.path.append(os.getcwd())
 
 from algorithm.algorithm import CatAlgorithm
 from generator.generator import CatGenerator
-from processor.processor import CatProcessor
+from processor.processor import CatProcessor, CatState
 from ui.resources import init_pygame_pictures
 from ui.cat_drawer import draw_cats, RES, DrawStyle
 
 INTER_FRAME_NUM = 60  # Number of interpolated frames
-TIME_DELTA = 0.01
+TIME_DELTA = 0.001
 FPS = 60
 
 
@@ -113,6 +113,7 @@ def run_ui():
         generator = CatGenerator(n, r, *RES)
         for obstacle in obstacles:
             generator.add_bad_border(obstacle[0], obstacle[1])
+            print('add bad border:', obstacle[0], obstacle[1])
 
         algo = CatAlgorithm(*RES, n, r0, r1)
         processor = CatProcessor(algo, generator)
@@ -194,7 +195,10 @@ def run_ui():
                 elif event.type == pygame.MOUSEBUTTONUP:
                     if start_pos:
                         end_pos = event.pos
-                        obstacles.append((start_pos, end_pos))  # Save the line
+                        dist = math.sqrt((start_pos[0] - end_pos[0])**2 - (start_pos[1] - end_pos[1])**2)
+
+                        if dist > 1:
+                            obstacles.append((start_pos, end_pos))  # Save the line
                         start_pos = None  # Reset the start position after drawing
 
         if not drawing_obstacles:
