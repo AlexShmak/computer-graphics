@@ -13,47 +13,12 @@ sys.path.append(os.getcwd())
 from algorithm.algorithm import CatAlgorithm
 from generator.generator import CatGenerator
 from processor.processor import CatProcessor
-from ui.resources import catstate_to_color, catstate_to_picture, init_pygame_pictures
+from ui.resources import init_pygame_pictures
+from ui.cat_drawer import draw_cats, RES, DrawStyle
 
 INTER_FRAME_NUM = 60  # Number of interpolated frames
 TIME_DELTA = 0.045
-DOT_SIZE = 10
-RES = (1500, 1000)
 FPS = 60
-DRAWING_STYLES = {"dots": catstate_to_color, "images": catstate_to_picture}
-IMAGE_SCALE = (40, 40)
-
-
-def draw_dots(
-    coords1, coords2, current_coords, states, window_surface, obstacles, style
-):
-    x1, y1 = coords1
-    x2, y2 = coords2
-    cx, cy = current_coords
-
-    # Draw obstacles (lines)
-    for start, end in obstacles:
-        pygame.draw.line(window_surface, (255, 0, 0), start, end, 2)
-
-    # Determine whether to draw interpolated or final positions
-    delta_x = np.abs(x2 - x1) >= RES[0] // 2
-    delta_y = np.abs(y2 - y1) >= RES[1] // 2
-
-    for ind, (x, y, state) in enumerate(zip(cx, cy, states)):
-        x_draw = x2[ind] if delta_x[ind] or delta_y[ind] else int(x)
-        y_draw = y2[ind] if delta_x[ind] or delta_y[ind] else int(y)
-        if style == "dots":
-            pygame.draw.circle(
-                window_surface,
-                DRAWING_STYLES[style](state),
-                (x_draw, y_draw),
-                DOT_SIZE,
-            )
-        else:
-            window_surface.blit(
-                pygame.transform.scale(DRAWING_STYLES[style](state), IMAGE_SCALE),
-                (x_draw, y_draw),
-            )
 
 
 def exit_app(processor: CatProcessor):
@@ -125,7 +90,7 @@ def run_ui():
     is_running = False
     is_paused = False
     current_frame = 0
-    current_style = "dots"
+    current_style = DrawStyle.PICTURES
 
     generator: CatGenerator = None
     algorithm: CatAlgorithm = None
@@ -197,10 +162,10 @@ def run_ui():
                     drawing_obstacles = not drawing_obstacles
 
                 if event.ui_element == buttons["chage_style"]:
-                    if current_style == "dots":
-                        current_style = "images"
+                    if current_style == DrawStyle.PICTURES:
+                        current_style = DrawStyle.DOTS
                     else:
-                        current_style = "dots"
+                        current_style = DrawStyle.PICTURES
 
             manager.process_events(event)
 
@@ -242,7 +207,7 @@ def run_ui():
                     "Current frame can't be more than the max number of frames"
                 )
 
-            draw_dots(
+            draw_cats(
                 coords1,
                 coords2,
                 current_coords,
@@ -261,7 +226,7 @@ def run_ui():
 
         else:
             if current_coords is not None:
-                draw_dots(
+                draw_cats(
                     coords1,
                     coords2,
                     current_coords,
