@@ -7,6 +7,7 @@ from time import perf_counter
 import pygame
 import pygame_gui
 import numpy as np
+import math
 
 sys.path.append(os.getcwd())
 
@@ -17,7 +18,7 @@ from ui.resources import init_pygame_pictures
 from ui.cat_drawer import draw_cats, RES, DrawStyle
 
 INTER_FRAME_NUM = 60  # Number of interpolated frames
-TIME_DELTA = 0.045
+TIME_DELTA = 0.01
 FPS = 60
 
 
@@ -144,9 +145,9 @@ def run_ui():
                     if is_running:
                         processor.stop()
                     try:
-                        start_params = (int(field.get_text()) for field in input_fields)
+                        n, r, r1, r0 = (int(field.get_text()) for field in input_fields)
 
-                        initialize_processor(*start_params)
+                        initialize_processor(n, r, r0, r1)
 
                         is_running = True
                         is_paused = False
@@ -240,7 +241,7 @@ def run_ui():
         for start, end in obstacles:
             pygame.draw.line(window_surface, (255, 0, 0), start, end, 2)
 
-        pygame.display.set_caption(f"Cats  |  {int(clock.get_fps())}")
+        pygame.display.set_caption(f"Cats  |  {math.ceil(clock.get_fps())}")
         manager.update(time_delta)
         manager.draw_ui(window_surface)
         pygame.display.update()

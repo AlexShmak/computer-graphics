@@ -29,11 +29,11 @@ class DrawStyle:
 
 
 def draw_cats(
-    coords1, coords2, intermediate_coords, states, window_surface, obstacles, draw_method
+    coords1, coords2, current_coords, states, window_surface, obstacles, draw_method
 ):
     x1, y1 = coords1
     x2, y2 = coords2
-    cx, cy = intermediate_coords
+    cx, cy = current_coords
 
     # Draw obstacles (lines)
     for start, end in obstacles:
@@ -48,5 +48,5 @@ def draw_cats(
     x_draw = np.where(draw_final, x2, np.array(cx, dtype=int))
     y_draw = np.where(draw_final, y2, np.array(cy, dtype=int))
 
-    for (x, y, state) in zip(x_draw, y_draw, states):
+    for x, y, state in zip(x_draw, y_draw, states):
         draw_method(window_surface, int(x), int(y), state)

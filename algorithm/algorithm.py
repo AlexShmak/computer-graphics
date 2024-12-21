@@ -11,6 +11,12 @@ class BasicState:
     FIGHT = 3
 
 
+class DistanceFunction:
+    EUCLIDEAN = 0
+    MANHATTAN = 1
+    CHEBYSHEV = 2
+
+
 class AbstractAlgo:
     """An algorithm that processes cats and returns their states."""
 
@@ -34,6 +40,7 @@ class CatAlgorithm(AbstractAlgo):
         R0: ti.f32,
         R1: ti.f32,
         limit_per_cell: int = 400,
+        distance_fun: int = DistanceFunction.EUCLIDEAN,
     ):
         self.N = N
         self.R0 = R0
@@ -45,6 +52,15 @@ class CatAlgorithm(AbstractAlgo):
         self.cell_Xn = int(X_border / self.cell_size) + 1
         self.cell_Yn = int(Y_border / self.cell_size) + 1
 
+        if distance_fun == DistanceFunction.EUCLIDEAN:
+            self.distance_fun = self.euclidean_distance
+        elif distance_fun == DistanceFunction.CHEBYSHEV:
+            self.distance_fun = self.chebyshev_distance
+        elif distance_fun == DistanceFunction.MANHATTAN:
+            self.distance_fun = self.manhattan_distance
+        else:
+            raise Exception("Unknown distance function")
+
     def start(self):
         self.cats_per_cell = ti.field(dtype=ti.i32, shape=(self.cell_Xn, self.cell_Yn))
         self.column_sum = ti.field(dtype=ti.i32, shape=self.cell_Xn)
@@ -53,6 +69,18 @@ class CatAlgorithm(AbstractAlgo):
         self.list_cur = ti.field(dtype=ti.i32, shape=self.cell_Xn * self.cell_Yn)
         self.list_tail = ti.field(dtype=ti.i32, shape=self.cell_Xn * self.cell_Yn)
         self.cats_id = ti.field(dtype=ti.i32, shape=self.N)
+
+    @ti.func
+    def euclidean_distance(self, x0, y0, x1, y1) -> ti.float64:
+        return ti.sqrt((x0 - x1) ** 2 + (y0 - y1) ** 2)
+
+    @ti.func
+    def manhattan_distance(self, x0, y0, x1, y1) -> ti.float64:
+        return ti.abs(x0 - x1) + ti.abs(y0 - y1)
+
+    @ti.func
+    def chebyshev_distance(self, x0, y0, x1, y1) -> ti.float64:
+        return ti.max(ti.abs(x0 - x1), ti.abs(y0 - y1))
 
     @ti.kernel
     def get_states(self, cat_pos: ti.types.ndarray(), out_states: ti.types.ndarray()):
@@ -125,16 +153,19 @@ class CatAlgorithm(AbstractAlgo):
                         processed += 1
                         j = self.cats_id[p]
                         if i != j:
-                            dist = ti.sqrt(
-                                (cat_pos[0, i] - cat_pos[0, j]) ** 2
-                                + (cat_pos[1, i] - cat_pos[1, j]) ** 2
+                            dist = self.distance_fun(
+                                cat_pos[0, i],
+                                cat_pos[1, i],
+                                cat_pos[0, j],
+                                cat_pos[1, j],
                             )
                             if dist <= self.R0:
                                 state = BasicState.FIGHT
                                 break
                             elif dist <= self.R1:
                                 prob = 1.0 / (dist**2)
-                                if ti.random(ti.f64) <= prob:
+                                rand = ti.random(ti.f64)
+                                if prob <= rand:
                                     state = BasicState.HISS
                                     break
                     if state == BasicState.FIGHT:
