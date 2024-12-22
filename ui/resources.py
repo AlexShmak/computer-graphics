@@ -2,6 +2,10 @@ import pygame
 from processor.processor import CatState
 
 
+class FoodState(CatState):
+    FOOD = 7
+
+
 STATE_COLORS = {
     CatState.WALK: (65, 105, 225),
     CatState.HISS: (255, 140, 0),
@@ -9,6 +13,7 @@ STATE_COLORS = {
     CatState.EAT: (0, 255, 127),
     CatState.HIT: (128, 128, 128),
     CatState.SLEEP: (106, 255, 255),
+    FoodState.FOOD: (255, 255, 255),
 }
 STATE_PICTURES = {}
 
@@ -27,6 +32,7 @@ def init_pygame_pictures():
     STATE_PICTURES[CatState.EAT] = load_picture("eat.png")
     STATE_PICTURES[CatState.HIT] = load_picture("hit.png")
     STATE_PICTURES[CatState.SLEEP] = load_picture("sleep.png")
+    STATE_PICTURES[FoodState.FOOD] = load_picture("food.png")
 
 
 def catstate_to_color(state_id: int):

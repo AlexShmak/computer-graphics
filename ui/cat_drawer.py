@@ -1,6 +1,6 @@
 import pygame
 import numpy as np
-from ui.resources import catstate_to_color, catstate_to_picture
+from ui.resources import catstate_to_color, catstate_to_picture, FoodState
 
 DOT_SIZE = 1
 IMAGE_SCALE = (40, 40)
@@ -29,7 +29,14 @@ class DrawStyle:
 
 
 def draw_cats(
-    coords1, coords2, current_coords, states, window_surface, obstacles, draw_method
+    coords1,
+    coords2,
+    current_coords,
+    states,
+    window_surface,
+    obstacles,
+    food,
+    draw_method,
 ):
     x1, y1 = coords1
     x2, y2 = coords2
@@ -38,6 +45,9 @@ def draw_cats(
     # Draw obstacles (lines)
     for start, end in obstacles:
         pygame.draw.line(window_surface, (255, 0, 0), start, end, 2)
+
+    for i in range(food.shape[1]):
+        draw_method(window_surface, int(food[0][i]), int(food[1][i]), FoodState.FOOD)
 
     # Determine whether to draw interpolated or final positions
     delta_x = np.abs(x2 - x1) >= RES[0] // 2

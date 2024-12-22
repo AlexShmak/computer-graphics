@@ -99,7 +99,15 @@ def run_ui():
     algorithm: CatAlgorithm = None
     processor: CatProcessor = None
 
-    coords1, states1, coords2, states2, current_coords = None, None, None, None, None
+    coords1, states1, coords2, states2, food1, food2, current_coords = (
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
     delta_dist = None
 
     # Obstacle variables
@@ -111,7 +119,16 @@ def run_ui():
     # last_frame_time = 0
 
     def initialize_processor(n, r, r0, r1, dist_fun=DistanceFunction.EUCLIDEAN):
-        nonlocal generator, processor, coords1, states1, coords2, states2, delta_dist
+        nonlocal \
+            generator, \
+            processor, \
+            coords1, \
+            states1, \
+            coords2, \
+            states2, \
+            food1, \
+            food2, \
+            delta_dist
         generator = CatGenerator(n, r, *RES)
         for obstacle in obstacles:
             generator.add_bad_border(obstacle[0], obstacle[1])
@@ -119,8 +136,8 @@ def run_ui():
         processor = CatProcessor(algorithm, generator)
         processor.start()
 
-        coords1, states1 = processor.data.unpack()
-        coords2, states2 = processor.data.unpack()
+        coords1, states1, food1 = processor.data.unpack()
+        coords2, states2, food2 = processor.data.unpack()
         delta_dist = (coords2 - coords1) / INTER_FRAME_NUM
 
     def start_animation(dis_fun: DistanceFunction = DistanceFunction.EUCLIDEAN):
@@ -229,14 +246,15 @@ def run_ui():
                 states1,
                 window_surface,
                 obstacles,
+                food1,
                 current_style,
             )
 
             current_frame = current_frame + 1
             if current_frame >= INTER_FRAME_NUM:
                 current_frame = 0
-                coords1, states1 = coords2, states2
-                coords2, states2 = processor.data.unpack()
+                coords1, states1, food1 = coords2, states2, food2
+                coords2, states2, food2 = processor.data.unpack()
                 delta_dist = (coords2 - coords1) / INTER_FRAME_NUM
 
         else:
@@ -248,6 +266,7 @@ def run_ui():
                     states1,
                     window_surface,
                     obstacles,
+                    food1,
                     current_style,
                 )
 

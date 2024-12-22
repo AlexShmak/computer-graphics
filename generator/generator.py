@@ -101,7 +101,7 @@ class CatGenerator(AbstractCatGenerator):
         return self.__food_coordinates
 
     def update_cats(self):
-        """Update every cat position"""        
+        """Update every cat position"""
         self.__update_angles()
         self.__move_cats()
         self.__restrict_cats()
