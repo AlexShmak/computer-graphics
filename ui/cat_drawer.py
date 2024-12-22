@@ -42,13 +42,6 @@ def draw_cats(
     x2, y2 = coords2
     cx, cy = current_coords
 
-    # Draw obstacles (lines)
-    for start, end in obstacles:
-        pygame.draw.line(window_surface, (255, 0, 0), start, end, 2)
-
-    for i in range(food.shape[1]):
-        draw_method(window_surface, int(food[0][i]), int(food[1][i]), FoodState.FOOD)
-
     # Determine whether to draw interpolated or final positions
     delta_x = np.abs(x2 - x1) >= RES[0] // 2
     delta_y = np.abs(y2 - y1) >= RES[1] // 2
@@ -60,3 +53,10 @@ def draw_cats(
 
     for x, y, state in zip(x_draw, y_draw, states):
         draw_method(window_surface, int(x), int(y), state)
+
+        # Draw obstacles (lines)
+    for start, end in obstacles:
+        pygame.draw.line(window_surface, (255, 0, 0), start, end, 2)
+
+    for i in range(food.shape[1]):
+        draw_method(window_surface, int(food[0][i]), int(food[1][i]), FoodState.FOOD)
