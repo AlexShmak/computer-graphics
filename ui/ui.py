@@ -10,9 +10,9 @@ import pygame_gui
 
 sys.path.append(os.getcwd())
 
-from algorithm.algorithm import CatAlgorithm
+from algorithm.algorithm import CatAlgorithm, DistanceFunction
 from generator.generator import CatGenerator
-from processor.processor import CatProcessor, CatState
+from processor.processor import CatProcessor
 from ui.cat_drawer import RES, DrawStyle, draw_cats
 from ui.resources import init_pygame_pictures
 
@@ -57,9 +57,9 @@ def run_ui():
             relative_rect=pygame.Rect(pos, (300, 30)), manager=manager
         )
 
-    def create_button(text, pos):
+    def create_button(text, pos, width=300, height=50):
         return pygame_gui.elements.UIButton(
-            relative_rect=pygame.Rect(pos, (300, 50)),
+            relative_rect=pygame.Rect(pos, (width, height)),
             text=text,
             manager=manager,
         )
@@ -83,7 +83,10 @@ def run_ui():
         "start": create_button("Start animation", (50, 340)),
         "pause": create_button("Pause/Resume", (50, 400)),
         "chage_style": create_button("Change style", (50, 460)),
-        "quit": create_button("Quit", (50, 520)),
+        "euclidian_dist_fun": create_button("Euclidian", (50, 520), width=98),
+        "manhattan_dist_fun": create_button("Manhattan", (151, 520), width=98),
+        "chebyshev_dist_fun": create_button("Chebyshev", (252, 520), width=98),
+        "quit": create_button("Quit", (50, 580)),
     }
 
     # State Variables
@@ -107,18 +110,34 @@ def run_ui():
     # Frames update
     # last_frame_time = 0
 
-    def initialize_processor(n, r, r0, r1):
+    def initialize_processor(n, r, r0, r1, dist_fun=DistanceFunction.EUCLIDEAN):
         nonlocal generator, processor, coords1, states1, coords2, states2, delta_dist
         generator = CatGenerator(n, r, *RES)
         for obstacle in obstacles:
             generator.add_bad_border(obstacle[0], obstacle[1])
-        algorithm = CatAlgorithm(*RES, n, r0, r1)
+        algorithm = CatAlgorithm(*RES, n, r0, r1, distance_fun=dist_fun)
         processor = CatProcessor(algorithm, generator)
         processor.start()
 
         coords1, states1 = processor.data.unpack()
         coords2, states2 = processor.data.unpack()
         delta_dist = (coords2 - coords1) / INTER_FRAME_NUM
+
+    def start_animation(dis_fun: DistanceFunction = DistanceFunction.EUCLIDEAN):
+        nonlocal is_running, is_paused, current_frame, drawing_obstacles
+        if is_running:
+            processor.stop()
+        try:
+            n, r, r1, r0 = (int(field.get_text()) for field in input_fields)
+
+            initialize_processor(n, r, r0, r1)
+
+            is_running = True
+            is_paused = False
+            current_frame = 0
+            drawing_obstacles = False
+        except ValueError as e:
+            print(repr(e))
 
     # Main Loop
     while True:
@@ -140,19 +159,7 @@ def run_ui():
                     exit_app(processor)
 
                 if event.ui_element == buttons["start"]:
-                    if is_running:
-                        processor.stop()
-                    try:
-                        n, r, r1, r0 = (int(field.get_text()) for field in input_fields)
-
-                        initialize_processor(n, r, r0, r1)
-
-                        is_running = True
-                        is_paused = False
-                        current_frame = 0
-                        drawing_obstacles = False
-                    except ValueError:
-                        continue
+                    start_animation()
 
                 if event.ui_element == buttons["pause"] and is_running:
                     is_paused = not is_paused
@@ -166,6 +173,15 @@ def run_ui():
                         current_style = DrawStyle.DOTS
                     else:
                         current_style = DrawStyle.PICTURES
+                if is_running:
+                    if event.ui_element == buttons["euclidian_dist_fun"]:
+                        start_animation(DistanceFunction.EUCLIDEAN)
+
+                    if event.ui_element == buttons["manhattan_dist_fun"]:
+                        start_animation(DistanceFunction.MANHATTAN)
+
+                    if event.ui_element == buttons["chebyshev_dist_fun"]:
+                        start_animation(DistanceFunction.CHEBYSHEV)
 
             # --- MOUSE ---
             if drawing_obstacles and not is_running:
