@@ -53,7 +53,6 @@ class CatProcessor:
         self,
         algorithm: AbstractAlgo,
         generator: AbstractCatGenerator,
-        workers_count: int = 5,
         max_size: int = 10,
     ):
         self.__algo = algorithm
@@ -65,8 +64,6 @@ class CatProcessor:
         # use queues to communicate between the generator and the algorithm processes.
         self.__gen_queue = mp.Queue(max_size)
         self.__algo_queue = mp.Queue(max_size)
-
-        self.__workers_count = workers_count
 
     @property
     def bank_size(self):
@@ -98,9 +95,8 @@ class CatProcessor:
         self.__gen_proc.kill()
         self.__gen_proc.join()
 
-        for proc in self.__algo_processes:
-            proc.kill()
-            proc.join()
+        self.__algo_proc.kill()
+        self.__algo_proc.join()
 
     def __start_workers(self):
         self.__gen_proc = mp.Process(
@@ -115,20 +111,18 @@ class CatProcessor:
         self.__algo_processes: list[mp.Process] = []
 
         # start algo workers
-        for _ in range(self.__workers_count):
-            algo_proc = mp.Process(
-                target=self.__algo_worker,
-                args=(
-                    self.__gen_queue,
-                    self.__algo_queue,
-                    self.__algo,
-                    self.__last_result_num,
-                ),
-                name="algorithm worker",
-            )
-            algo_proc.start()
+        self.__algo_proc = mp.Process(
+            target=self.__algo_worker,
+            args=(
+                self.__gen_queue,
+                self.__algo_queue,
+                self.__algo,
+                self.__last_result_num,
+            ),
+            name="algorithm worker",
+        )
+        self.__algo_proc.start()
 
-            self.__algo_processes.append(algo_proc)
 
     def __gen_worker(self, N: int, q: mp.Queue, gen: AbstractCatGenerator):
         data_num = 0  # last generated data number (need for sync)
@@ -138,19 +132,20 @@ class CatProcessor:
 
             # get new cat positions
             cats = gen.cats.astype(int)
-            gen.update_cats()
-            cats = gen.cats
-            food = gen.food
+            food = gen.food.astype(int)
 
             # form states array
             states = np.full(N, CatState.WALK)
 
+            # update data for next iteration
+            gen.update_cats()
+
+            if gen.eating_cat_ids.size > 0:
+                states[gen.eating_cat_ids] = CatState.EAT
             if gen.sleepy_cat_ids.size > 0:
                 states[gen.sleepy_cat_ids] = CatState.SLEEP
             if gen.hit_cat_ids.size > 0:
                 states[gen.hit_cat_ids] = CatState.HIT
-            if gen.eating_cat_ids.size > 0:
-                states[gen.eating_cat_ids] = CatState.EAT
 
             # add states array to cats array
             cats_data = CatData(cats, states, food)

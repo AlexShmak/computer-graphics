@@ -39,7 +39,7 @@ class CatAlgorithm(AbstractAlgo):
         N: ti.i32,
         R0: ti.f32,
         R1: ti.f32,
-        limit_per_cell: int = 400,
+        limit_per_cell: int = 50,
         distance_fun: int = DistanceFunction.EUCLIDEAN,
     ):
         self.N = N

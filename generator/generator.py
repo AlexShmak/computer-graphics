@@ -128,6 +128,7 @@ class CatGenerator(AbstractCatGenerator):
         """Move all cats based on their current angles."""
         xs, ys = self.__cat_coordinates[0], self.__cat_coordinates[1]
         self.__eating_cat_ids = np.array([])
+        self.__hit_cat_ids = np.array([])
 
         ### get sleepy cats
         sleepy_cats_count = random.randint(0, self.__CATS_COUNT // 10)
@@ -140,25 +141,25 @@ class CatGenerator(AbstractCatGenerator):
         new_xs = xs + self.__RADIUS * self.__cos_array
         new_ys = ys + self.__RADIUS * self.__sin_array
 
-        self.__hit_cat_ids = np.array([])
-
         ### look through all the bad borders
         for x0, y0, x1, y1 in self.__bad_border_coordinates:
             # find all intersections of cats with bad border
-            ids, intersection_xs, intersection_ys = self.__find_intersections(
+            hit_ids, intersection_xs, intersection_ys = self.__find_intersections(
                 xs, ys, new_xs, new_ys, x0, y0, x1, y1
             )
             # ids -> id of cats that tried to intersect bad border
 
-            if len(ids) == 0:
+            if hit_ids.size == 0:
                 continue
 
-            self.__hit_cat_ids = np.append(self.__hit_cat_ids, np.unique(np.where(ids)))
+            self.__hit_cat_ids = np.append(self.__hit_cat_ids, hit_ids)
 
             # return back these cats (but with small offset otherwise they will get stuck at the border)
-            new_xs[ids], new_ys[ids] = self.__offset_points(
-                xs[ids], ys[ids], intersection_xs, intersection_ys
+            new_xs[hit_ids], new_ys[hit_ids] = self.__offset_points(
+                xs[hit_ids], ys[hit_ids], intersection_xs, intersection_ys
             )
+
+        self.__hit_cat_ids = np.unique(self.__hit_cat_ids)
 
         ### find eating cats
         food_xs, food_ys = self.__food_coordinates
@@ -166,23 +167,27 @@ class CatGenerator(AbstractCatGenerator):
             distances = np.sqrt(np.square(xs - food_x) + np.square(ys - food_y))
             eating_cats_mask = distances < self.__FOOD_SMELL_RADIUS
 
+            if eating_cats_mask.size <= 0:
+                continue
+
             # stay at the same place
             new_xs[eating_cats_mask] = xs[eating_cats_mask]
             new_ys[eating_cats_mask] = ys[eating_cats_mask]
 
             self.__eating_cat_ids = np.append(
-                self.__eating_cat_ids, np.unique(np.where(eating_cats_mask))
+                self.__eating_cat_ids, np.where(eating_cats_mask)
             )
 
             # relocate food
-            if np.any(eating_cats_mask):
-                (
-                    self.__food_coordinates[0, food_id],
-                    self.__food_coordinates[1, food_id],
-                ) = (
-                    random.randint(0, self.__BORDER["x"]),
-                    random.randint(0, self.__BORDER["y"]),
-                )
+            (
+                self.__food_coordinates[0, food_id],
+                self.__food_coordinates[1, food_id],
+            ) = (
+                random.randint(0, self.__BORDER["x"]),
+                random.randint(0, self.__BORDER["y"]),
+            )
+
+        self.__eating_cat_ids = np.unique(self.__eating_cat_ids)
 
         # put some of the cats to sleep
         new_xs[sleepy_cat_ids], new_ys[sleepy_cat_ids] = (

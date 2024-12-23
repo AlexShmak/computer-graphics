@@ -1,5 +1,6 @@
 import pygame
 import numpy as np
+from processor.processor import CatState
 from ui.resources import catstate_to_color, catstate_to_picture, FoodState
 
 DOT_SIZE = 1
@@ -42,6 +43,8 @@ def draw_cats(
     x2, y2 = coords2
     cx, cy = current_coords
 
+    import numpy as np
+
     # Determine whether to draw interpolated or final positions
     delta_x = np.abs(x2 - x1) >= RES[0] // 2
     delta_y = np.abs(y2 - y1) >= RES[1] // 2
@@ -51,7 +54,11 @@ def draw_cats(
     x_draw = np.where(draw_final, x2, np.array(cx, dtype=int))
     y_draw = np.where(draw_final, y2, np.array(cy, dtype=int))
 
+    hit_cats_count = 0
+
     for x, y, state in zip(x_draw, y_draw, states):
+        if state == CatState.HIT:
+            hit_cats_count += 1
         draw_method(window_surface, int(x), int(y), state)
 
         # Draw obstacles (lines)

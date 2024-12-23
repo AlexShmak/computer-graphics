@@ -12,7 +12,7 @@ sys.path.append(os.getcwd())
 
 from algorithm.algorithm import CatAlgorithm, DistanceFunction
 from generator.generator import CatGenerator
-from processor.processor import CatProcessor
+from processor.processor import CatProcessor, CatState
 from ui.cat_drawer import RES, DrawStyle, draw_cats
 from ui.resources import init_pygame_pictures
 
@@ -138,6 +138,7 @@ def run_ui():
 
         coords1, states1, food1 = processor.data.unpack()
         coords2, states2, food2 = processor.data.unpack()
+
         delta_dist = (coords2 - coords1) / INTER_FRAME_NUM
 
     def start_animation(dis_fun: DistanceFunction = DistanceFunction.EUCLIDEAN):
@@ -255,6 +256,7 @@ def run_ui():
                 current_frame = 0
                 coords1, states1, food1 = coords2, states2, food2
                 coords2, states2, food2 = processor.data.unpack()
+
                 delta_dist = (coords2 - coords1) / INTER_FRAME_NUM
 
         else:
