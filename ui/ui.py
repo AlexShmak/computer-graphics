@@ -17,7 +17,6 @@ from ui.cat_drawer import RES, DrawStyle, draw_cats
 from ui.resources import init_pygame_pictures
 
 INTER_FRAME_NUM = 60  # Number of interpolated frames
-# TIME_DELTA = 0.05
 FPS = 60
 
 
@@ -147,6 +146,10 @@ def run_ui():
             processor.stop()
         try:
             n, r, r1, r0 = (int(field.get_text()) for field in input_fields)
+            if n >= 100_000:
+                INTER_FRAME_NUM = 30
+            if n >= 400_000:
+                INTER_FRAME_NUM = 1
 
             initialize_processor(n, r, r0, r1)
 
@@ -160,12 +163,6 @@ def run_ui():
     # Main Loop
     while True:
         time_delta = clock.tick(FPS) / 1000.0
-        # current_time = perf_counter()
-        # if current_time - last_frame_time >= TIME_DELTA:
-        #     last_frame_time = current_time  # Update the last frame time
-        #     frame_update = True
-        # else:
-        #     frame_update = False
 
         for event in pygame.event.get():
             # --- GUI BUTTONS ---
