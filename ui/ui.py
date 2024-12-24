@@ -142,14 +142,12 @@ def run_ui():
 
     def start_animation(dis_fun: DistanceFunction = DistanceFunction.EUCLIDEAN):
         nonlocal is_running, is_paused, current_frame, drawing_obstacles
+        global INTER_FRAME_NUM
         if is_running:
             processor.stop()
         try:
             n, r, r1, r0 = (int(field.get_text()) for field in input_fields)
-            if n >= 100_000:
-                INTER_FRAME_NUM = 30
-            if n >= 400_000:
-                INTER_FRAME_NUM = 1
+            INTER_FRAME_NUM = get_inter_frame_num(n)
 
             initialize_processor(n, r, r0, r1)
 
@@ -277,3 +275,7 @@ def run_ui():
         manager.update(time_delta)
         manager.draw_ui(window_surface)
         pygame.display.update()
+
+
+def get_inter_frame_num(N):
+  return (N >= 400_000) * 1 + ((N >= 100_000) and (N < 400_000)) * 30 + (N < 100_000) * 60
