@@ -1,6 +1,6 @@
 import time
 import numpy as np
-from algorithm.algorithm import CatAlgorithm
+from algorithm import CatAlgorithm
 import taichi as ti
 import pytest
 

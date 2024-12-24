@@ -1,6 +1,6 @@
 from time import perf_counter
 import pytest
-from generator.generator import CatGenerator
+from generator import CatGenerator
 import random
 
 

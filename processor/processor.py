@@ -123,7 +123,6 @@ class CatProcessor:
         )
         self.__algo_proc.start()
 
-
     def __gen_worker(self, N: int, q: mp.Queue, gen: AbstractCatGenerator):
         data_num = 0  # last generated data number (need for sync)
 
