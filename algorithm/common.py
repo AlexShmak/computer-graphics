@@ -1,6 +1,0 @@
-WALK = 0
-HISS = 1
-FIGHT = 2
-SLEEP = 3
-EAT = 4
-HIT = 5
