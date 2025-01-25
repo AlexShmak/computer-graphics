@@ -69,6 +69,9 @@ python main.py
 pytest .
 ```
 
+## Docs
+[Ссылка](https://github.com/AlexShmak/computer-graphics/blob/To_perfect/DOCS.md) на документацию
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
