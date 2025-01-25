@@ -1,3 +1,5 @@
+[![Code style & tests](https://github.com/AlexShmak/computer-graphics/actions/workflows/run_tests.yml/badge.svg)](https://github.com/AlexShmak/computer-graphics/actions/workflows/run_tests.yml)
+---
 # Котики
 Приложение для симуляции и визуализации перемещения котов и их состояний в зависимости от расстояния относительно друг друга.
 
