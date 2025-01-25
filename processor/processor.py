@@ -68,9 +68,9 @@ class CatProcessor:
     @property
     def bank_size(self):
         """Return the number of items in the generator and algorithm queues."""
-        assert (
-            not self.__stop_event.is_set()
-        ), "Can't get bank size when processor stopped."
+        assert not self.__stop_event.is_set(), (
+            "Can't get bank size when processor stopped."
+        )
 
         return (self.__gen_queue.qsize(), self.__algo_queue.qsize())
 

@@ -41,10 +41,10 @@ def catstate_to_color(state_id: int):
 
 
 def catstate_to_picture(state_id: int):
-    assert (
-        len(STATE_PICTURES.keys()) > 0
-    ), "Pictures dictionary is empty. Don't forget to call init_pygame_pictures()!"
-    assert (
-        state_id in STATE_PICTURES.keys()
-    ), f"Can't find picture for state {state_id}!"
+    assert len(STATE_PICTURES.keys()) > 0, (
+        "Pictures dictionary is empty. Don't forget to call init_pygame_pictures()!"
+    )
+    assert state_id in STATE_PICTURES.keys(), (
+        f"Can't find picture for state {state_id}!"
+    )
     return STATE_PICTURES[state_id]
