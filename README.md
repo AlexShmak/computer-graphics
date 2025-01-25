@@ -1,6 +1,6 @@
 [![Code style & tests](https://github.com/AlexShmak/computer-graphics/actions/workflows/run_tests.yml/badge.svg)](https://github.com/AlexShmak/computer-graphics/actions/workflows/run_tests.yml)
 ---
-# Котики
+# Cats App
 Приложение для симуляции и визуализации перемещения котов и их взаимодействия.
 
 ## Правила взаимодействия
